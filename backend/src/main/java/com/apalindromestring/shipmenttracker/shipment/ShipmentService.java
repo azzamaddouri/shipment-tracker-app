@@ -10,17 +10,21 @@ import java.util.UUID;
 public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
+    private final ShipmentMapper shipmentMapper;
 
-    public Shipment createShipment(ShipmentDTO.CreateShipmentRequest request) {
+    public ShipmentDTO.ShipmentResponse createShipment(ShipmentDTO.CreateShipmentRequest request) {
         String trackingNumber = generateTrackingNumber();
+
         Shipment shipment = Shipment.builder()
                 .trackingNumber(trackingNumber)
                 .origin(request.origin)
                 .destination(request.destination)
                 .estimatedDelivery(request.estimatedDelivery)
                 .build();
-        shipmentRepository.save(shipment);
-        return shipment;
+
+        Shipment savedShipment = shipmentRepository.save(shipment);
+
+        return shipmentMapper.toDto(savedShipment);
     }
 
 
