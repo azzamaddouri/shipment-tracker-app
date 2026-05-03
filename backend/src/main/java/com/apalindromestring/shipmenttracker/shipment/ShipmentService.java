@@ -1,21 +1,30 @@
 package com.apalindromestring.shipmenttracker.shipment;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ShipmentService {
 
-    private ShipmentRepository shipmentRepository;
+    private final ShipmentRepository shipmentRepository;
 
-    public void createShipment(){
+    public Shipment createShipment(ShipmentDTO.CreateShipmentRequest request) {
+        String trackingNumber = generateTrackingNumber();
         Shipment shipment = Shipment.builder()
-                .trackingNumber("TRACK12345")
-                .origin("New York")
-                .destination("Los Angeles")
+                .trackingNumber(trackingNumber)
+                .origin(request.origin)
+                .destination(request.destination)
+                .estimatedDelivery(request.estimatedDelivery)
                 .build();
         shipmentRepository.save(shipment);
+        return shipment;
     }
 
+
+    private String generateTrackingNumber() {
+        return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
 }
