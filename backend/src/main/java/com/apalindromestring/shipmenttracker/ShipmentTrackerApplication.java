@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ShipmentTrackerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ShipmenttrackerApplication.class, args);
+		SpringApplication.run(ShipmentTrackerApplication.class, args);
 	}
 
 }
