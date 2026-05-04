@@ -14,10 +14,13 @@ import java.util.List;
 public class ShipmentController {
 
     private final ShipmentService shipmentService;
+    private final ShipmentMapper shipmentMapper;
 
     @PostMapping
     public ResponseEntity<ShipmentDTO.ShipmentResponse> createShipment(@Valid @RequestBody ShipmentDTO.CreateShipmentRequest request) {
-        ShipmentDTO.ShipmentResponse shipment = shipmentService.createShipment(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(shipment);
+        Shipment shipmentToCreate = shipmentMapper.toEntity(request);
+        Shipment savedShipment = shipmentService.createShipment(shipmentToCreate);
+
+        return new ResponseEntity<>(shipmentMapper.toDto(savedShipment), HttpStatus.CREATED);
     }
 }
