@@ -20,6 +20,11 @@ public class ShipmentService {
     }
 
 
+    public List<Shipment> getAllShipments() {
+        return shipmentRepository.findAll();
+    }
+
+
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }

@@ -23,4 +23,12 @@ public class ShipmentController {
 
         return new ResponseEntity<>(shipmentMapper.toDto(savedShipment), HttpStatus.CREATED);
     }
+
+    @GetMapping
+    public ResponseEntity<List<ShipmentDTO.ShipmentResponse>> getShipments() {
+        List<ShipmentDTO.ShipmentResponse> shipments = shipmentService.getAllShipments()
+                .stream().map(shipmentMapper::toDto)
+                .toList();
+        return new ResponseEntity<>(shipments, HttpStatus.OK);
+    }
 }
