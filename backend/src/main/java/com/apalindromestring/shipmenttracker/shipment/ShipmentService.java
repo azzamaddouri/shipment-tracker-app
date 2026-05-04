@@ -26,11 +26,16 @@ public class ShipmentService {
 
     public Shipment getShipmentById(Long id) {
         return shipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Shipment not found with id" + id));
+                .orElseThrow(() -> new RuntimeException("Shipment not found with id " + id));
     }
 
 
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    public Shipment getShipmentByTrackingNumber(String trackingNumber) {
+        return shipmentRepository.findShipmentByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new RuntimeException("Shipment not found with Tracking Number " + trackingNumber));
     }
 }

@@ -39,4 +39,11 @@ public class ShipmentController {
         return new ResponseEntity<>(shipmentResponse, HttpStatus.OK);
     }
 
+    @GetMapping("/track/{trackingNumber}")
+    public ResponseEntity<ShipmentDTO.ShipmentResponse> getShipmentByTrackingNumber(@PathVariable String trackingNumber) {
+        Shipment shipment = shipmentService.getShipmentByTrackingNumber(trackingNumber);
+        ShipmentDTO.ShipmentResponse shipmentResponse = shipmentMapper.toDto(shipment);
+        return new ResponseEntity<>(shipmentResponse, HttpStatus.OK);
+    }
+
 }
