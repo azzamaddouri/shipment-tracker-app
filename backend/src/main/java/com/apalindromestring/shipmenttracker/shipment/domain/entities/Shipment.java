@@ -1,5 +1,6 @@
-package com.apalindromestring.shipmenttracker.shipment;
+package com.apalindromestring.shipmenttracker.shipment.domain.entities;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
