@@ -1,5 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.mappers;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.ShipmentDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
@@ -14,5 +15,7 @@ public interface ShipmentMapper {
     ShipmentDto toDto(Shipment shipment);
 
     CreateShipmentRequest toCreateShipmentRequest(ShipmentDto.CreateShipmentRequest dto);
+
+    UpdateStatusRequest toUpdateStatusRequest(ShipmentDto.UpdateStatusRequest dto);
 
 }

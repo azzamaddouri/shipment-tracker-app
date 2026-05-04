@@ -1,5 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.services.impl;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentRepository;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
@@ -38,6 +39,20 @@ public class ShipmentServiceImpl implements ShipmentService {
     public Shipment getShipmentByTrackingNumber(String trackingNumber) {
         return shipmentRepository.findShipmentByTrackingNumber(trackingNumber)
                 .orElseThrow(() -> new RuntimeException("Shipment not found with Tracking Number " + trackingNumber));
+    }
+
+    @Override
+    public Shipment updateShipmentStatus(Long id, UpdateStatusRequest updateStatusRequest) {
+        Shipment existingShipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Shipment not found with id " + id));
+
+        existingShipment.setStatus(updateStatusRequest.getStatus());
+
+        if (updateStatusRequest.getCurrentLocation() != null) {
+            existingShipment.setCurrentLocation(updateStatusRequest.getCurrentLocation());
+        }
+
+        return shipmentRepository.save(existingShipment);
     }
 
 
