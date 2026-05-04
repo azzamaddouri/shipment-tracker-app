@@ -24,6 +24,11 @@ public class ShipmentService {
         return shipmentRepository.findAll();
     }
 
+    public Shipment getShipmentById(Long id) {
+        return shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Shipment not found with id" + id));
+    }
+
 
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();

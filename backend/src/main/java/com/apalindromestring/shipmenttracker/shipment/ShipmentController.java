@@ -31,4 +31,12 @@ public class ShipmentController {
                 .toList();
         return new ResponseEntity<>(shipments, HttpStatus.OK);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ShipmentDTO.ShipmentResponse> getShipmentById(@PathVariable Long id) {
+        Shipment shipment = shipmentService.getShipmentById(id);
+        ShipmentDTO.ShipmentResponse shipmentResponse = shipmentMapper.toDto(shipment);
+        return new ResponseEntity<>(shipmentResponse, HttpStatus.OK);
+    }
+
 }
