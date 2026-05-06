@@ -16,8 +16,8 @@ export interface Shipment {
     origin: string;
     destination: string;
     status: ShipmentStatus;
-    createdAt: String;
-    updatedAt: String;
+    createdAt: string;
+    updatedAt: string;
     currentLocation: string;
     estimatedDelivery?: string;
 };
@@ -40,7 +40,7 @@ export interface StatusUpdateMessage{
     trackingNumber: string;
     status: ShipmentStatus;
     currentLocation: string;
-    timestamp: String;
+    timestamp: string;
     message: string;
 
 };

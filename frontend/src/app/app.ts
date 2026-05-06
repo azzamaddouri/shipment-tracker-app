@@ -1,10 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { Header } from './components/header/header';
 import { ShipmentGrid } from './components/shipment-grid/shipment-grid';
+import { CreateShipment } from './components/create-shipment/create-shipment';
 
 @Component({
   selector: 'app-root',
-  imports: [ShipmentGrid,Header],
+  imports: [ShipmentGrid,CreateShipment],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

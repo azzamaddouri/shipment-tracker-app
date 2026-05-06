@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ShipmentService } from '../../services/shipment-service';
-import {  SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS } from '../../models/shipment.model';
+import {  Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS } from '../../models/shipment.model';
 import { DatePipe, NgClass } from '@angular/common';
 
 @Component({
@@ -13,7 +13,7 @@ export class ShipmentGrid implements OnInit {
   
 
   private shipmentService = inject(ShipmentService);
-  shipments = signal<any[]>([]);
+  shipments = signal<Shipment[]>([]);
 
   STATUS_LABELS = STATUS_LABELS;
 
