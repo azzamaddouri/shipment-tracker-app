@@ -1,4 +1,4 @@
-export const SHIPMENT_STATUSES = {
+export const SHIPMENT_STATUS = {
     ORDER_PLACED: 'ORDER_PLACED',
     PROCESSING: 'PROCESSING',
     PICKED_UP: 'PICKED_UP',
@@ -8,7 +8,7 @@ export const SHIPMENT_STATUSES = {
     EXCEPTION: 'EXCEPTION'
 } as const;
 
-export type ShipmentStatus = keyof typeof SHIPMENT_STATUSES;
+export type ShipmentStatus = keyof typeof SHIPMENT_STATUS;
 
 export interface Shipment {
     id: number;
@@ -46,11 +46,11 @@ export interface StatusUpdateMessage{
 };
 
 export const STATUS_LABELS: Readonly<Record<ShipmentStatus, string>> = {
-    [SHIPMENT_STATUSES.ORDER_PLACED]: 'Order Placed',
-    [SHIPMENT_STATUSES.PROCESSING]: 'Processing',
-    [SHIPMENT_STATUSES.PICKED_UP]: 'Picked Up',
-    [SHIPMENT_STATUSES.IN_TRANSIT]: 'In Transit',
-    [SHIPMENT_STATUSES.OUT_FOR_DELIVERY]: 'Out for Delivery',
-    [SHIPMENT_STATUSES.DELIVERED]: 'Delivered',
-    [SHIPMENT_STATUSES.EXCEPTION]: 'Exception'
+    [SHIPMENT_STATUS.ORDER_PLACED]: 'Order Placed',
+    [SHIPMENT_STATUS.PROCESSING]: 'Processing',
+    [SHIPMENT_STATUS.PICKED_UP]: 'Picked Up',
+    [SHIPMENT_STATUS.IN_TRANSIT]: 'In Transit',
+    [SHIPMENT_STATUS.OUT_FOR_DELIVERY]: 'Out for Delivery',
+    [SHIPMENT_STATUS.DELIVERED]: 'Delivered',
+    [SHIPMENT_STATUS.EXCEPTION]: 'Exception'
 };

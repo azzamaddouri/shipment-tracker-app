@@ -9,7 +9,7 @@ import { CreateShipmentRequest } from '../models/shipment.model';
 export class ShipmentService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/shipments';
+  private apiUrl = 'http://localhost:8080/api/v1/shipments';
 
   createShipment(createShipmentRequest: CreateShipmentRequest): Observable<any> {
     return this.http.post<any>(this.apiUrl, createShipmentRequest);
