@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ShipmentService } from '../../services/shipment-service';
+import { ShipmentService } from '../../services/shipment/shipment-service';
 import {  Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS } from '../../models/shipment.model';
 import { DatePipe, NgClass } from '@angular/common';
 
