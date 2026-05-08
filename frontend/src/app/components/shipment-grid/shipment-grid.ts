@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ShipmentService } from '../../services/shipment/shipment-service';
 import {  Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS } from '../../models/shipment.model';
 import { DatePipe, NgClass } from '@angular/common';
+import { WebsocketService } from '../../services/websocket/websocket-service';
 
 @Component({
   selector: 'app-shipment-grid',
@@ -14,6 +15,8 @@ export class ShipmentGrid implements OnInit {
 
   private shipmentService = inject(ShipmentService);
   shipments = signal<Shipment[]>([]);
+
+  private websocketService = inject(WebsocketService);
 
   STATUS_LABELS = STATUS_LABELS;
 
@@ -31,6 +34,7 @@ export class ShipmentGrid implements OnInit {
 
   ngOnInit(): void {
    this.loadShipments();
+    this.websocketService.connect();
   }
 
   loadShipments(): void {
