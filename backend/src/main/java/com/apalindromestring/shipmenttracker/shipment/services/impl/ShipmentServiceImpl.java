@@ -82,8 +82,12 @@ public class ShipmentServiceImpl implements ShipmentService {
                 .timestamp(shipment.getUpdatedAt())
                 .message(message)
                 .build();
+
+        // Use case - Users watch all shipments
         messagingTemplate.convertAndSend("/topic/shipments", statusUpdateMessage);
-        messagingTemplate.convertAndSend("/topic/shipments" + shipment.getId(), statusUpdateMessage);
+
+        // Use case - Customer tracks their specific shipment
+        messagingTemplate.convertAndSend("/topic/shipments/" + shipment.getId(), statusUpdateMessage);
         log.info("Sent shipment status update: {}", statusUpdateMessage);
     }
 

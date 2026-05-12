@@ -14,6 +14,7 @@ export class WebsocketService {
   private subscriptions = new Map<string, StompSubscription>();
 
   constructor() {
+
     this.initClient();
 
     this.destoryRef.onDestroy(() => {
@@ -21,11 +22,13 @@ export class WebsocketService {
       this.stausUpdate$.complete();
       this.connected$.complete();
     });
+
   }
 
   initClient(): void {
+
     this.client = new Client({
-      brokerURL: 'http://localhost:8080/ws',
+      brokerURL: 'ws://localhost:8080/ws',
       stompVersions: Versions.default,
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -33,33 +36,48 @@ export class WebsocketService {
       connectionTimeout: 10000,
 
       onConnect: (frame) => {
-        console.log('[Websocket] Connected!!');
+        console.log('[WebSocket] Connected: ' + frame);
         this.connected$.next(true);
         this.subscripeToTopics();
       },
-      onDisconnect: () => {
-        console.log('[Websocket] Disconnected');
+
+      onDisconnect: (frame) => {
+        console.log('[WebSocket] Disconnected: ' + frame);
         this.connected$.next(false);
         this.subscriptions.clear();
       },
 
-      onStompError: (frame) => {
-        console.error('[WebSocket] STOMP error:', frame.headers['message']);
-        console.error('[WebSocket] Error details:', frame.body);
+      onWebSocketError: (error) => {
+        console.error('[WebSocket] Error with websocket', error);
         this.connected$.next(false);
       },
 
-      onWebSocketError: (event) => {
-        console.error('[WebSocket] WebSocket error:', event);
+      onStompError: (frame) => {
+        console.error('[WebSocket] Broker reported error: ' + frame.headers['message']);
+        console.error('[WebSocket] Additional details: ' + frame.body);
         this.connected$.next(false);
       },
 
       onWebSocketClose: (event) => {
-        console.log('[WebSocket] WebSocket closed:', event.code, event.reason);
+        console.log('[WebSocket] Closed:', event.code, event.reason);
         this.connected$.next(false);
       },
     });
   }
+
+  private subscripeToTopics(): void {
+    const subscription = this.client.subscribe('/topic/shipments', (stompMessageFrame) => {
+      try {
+        const statusUpdateMessage = JSON.parse(stompMessageFrame.body) as StatusUpdateMessage;
+        console.log('[WebSocket] Received update:', statusUpdateMessage);
+        this.stausUpdate$.next(statusUpdateMessage);
+      } catch (error) {
+        console.error('[WebSocket] Failed to parse message:', error);
+      }
+    });
+
+    this.subscriptions.set('/topic/shipments', subscription);
+  } 
 
   connect(): void {
     if (this.client.active) {
@@ -93,18 +111,5 @@ export class WebsocketService {
     return this.connected$.asObservable();
   }
 
-  private subscripeToTopics(): void {
-    const subscription = this.client.subscribe('/topic/shipments', (message) => {
-      try {
-        const update = JSON.parse(message.body) as StatusUpdateMessage;
-        console.log('[WebSocket] Received update:', update);
-        this.stausUpdate$.next(update);
-      } catch (error) {
-        console.error('[WebSocket] Failed to parse message:', error);
-      }
-    });
-
-    this.subscriptions.set('/topic/shipments', subscription);
-  } 
 
 }
