@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ShipmentService } from '../../services/shipment/shipment-service';
-import {  Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS } from '../../models/shipment.model';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../models/shipment.model';
 import { DatePipe, NgClass } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ShipmentService } from '../../services/shipment/shipment-service';
 import { WebsocketService } from '../../services/websocket/websocket-service';
 
 @Component({
@@ -11,17 +12,13 @@ import { WebsocketService } from '../../services/websocket/websocket-service';
   styleUrl: './shipment-grid.css',
 })
 export class ShipmentGrid implements OnInit {
-  
-
+  private destroyRef = inject(DestroyRef);
   private shipmentService = inject(ShipmentService);
+  private webSocketService = inject(WebsocketService);
   shipments = signal<Shipment[]>([]);
-
-  private websocketService = inject(WebsocketService);
-
   STATUS_LABELS = STATUS_LABELS;
 
-
-   readonly STATUS_BADGE_CLASS_MAP: Record<ShipmentStatus, string> = {
+  readonly STATUS_BADGE_CLASS_MAP: Record<ShipmentStatus, string> = {
     [SHIPMENT_STATUS.ORDER_PLACED]: 'bg-blue-500/10 text-blue-400 ring-blue-500/20',
     [SHIPMENT_STATUS.PROCESSING]: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
     [SHIPMENT_STATUS.PICKED_UP]: 'bg-purple-500/10 text-purple-400 ring-purple-500/20',
@@ -31,22 +28,58 @@ export class ShipmentGrid implements OnInit {
     [SHIPMENT_STATUS.EXCEPTION]: 'bg-red-500/10 text-red-400 ring-red-500/20',
   };
 
-
   ngOnInit(): void {
-   this.loadShipments();
-    this.websocketService.connect();
+    this.loadShipment();
+    this.connectWebSocket();
+
+    console.log('RUNNING');
   }
 
-  loadShipments(): void {
-    this.shipmentService.getAllShipments()
-    .subscribe((shipments) => {
+  private connectWebSocket(): void {
+    this.webSocketService.connect();
+    this.handleUpdate();
+  }
+
+  private handleUpdate(): void {
+    this.webSocketService
+      .getStatusUpdates()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        if (update) {
+          this.handleStatusUpdate(update);
+        }
+      });
+  }
+
+  private handleStatusUpdate(update: StatusUpdateMessage): void {
+    this.shipments.update((shipments) => {
+      const updatedShipment = shipments.find((shipment) => shipment.id === update.shipmentId);
+      if (!updatedShipment) {
+        return shipments;
+      }
+
+      const updatedShipments = shipments.map((shipment) => {
+        if (shipment.id !== updatedShipment.id) return shipment;
+
+        return {
+          ...shipment,
+          status: update.status,
+          currentLocation: update.currentLocation,
+          updatedAt: update.timestamp,
+        };
+      });
+
+      return updatedShipments;
+    });
+  }
+
+  loadShipment(): void {
+    this.shipmentService.getAllShipments().subscribe((shipments) => {
       this.shipments.set(shipments);
     });
   }
 
-
   getStatusBadgeClass(status: ShipmentStatus): string {
     return this.STATUS_BADGE_CLASS_MAP[status];
   }
-
 }

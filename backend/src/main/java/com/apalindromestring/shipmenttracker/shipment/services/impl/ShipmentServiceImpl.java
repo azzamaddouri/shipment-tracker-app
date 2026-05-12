@@ -75,7 +75,7 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     public void notifyShipment(Shipment shipment, String message) {
         StatusUpdateMessage statusUpdateMessage = StatusUpdateMessage.builder()
-                .ShipmentId(shipment.getId())
+                .shipmentId(shipment.getId())
                 .trackingNumber(shipment.getTrackingNumber())
                 .status(shipment.getStatus())
                 .currentLocation(shipment.getCurrentLocation())

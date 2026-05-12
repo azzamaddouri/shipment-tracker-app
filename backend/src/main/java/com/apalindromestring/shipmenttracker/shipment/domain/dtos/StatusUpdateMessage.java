@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatusUpdateMessage {
-    public Long ShipmentId;
+    public Long shipmentId;
     public String trackingNumber;
     public ShipmentStatus status;
     public String currentLocation;
