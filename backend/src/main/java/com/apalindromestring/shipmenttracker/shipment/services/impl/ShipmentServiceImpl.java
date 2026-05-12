@@ -1,15 +1,14 @@
 package com.apalindromestring.shipmenttracker.shipment.services.impl;
 
-import com.apalindromestring.shipmenttracker.shipment.domain.ShipmentStatus;
-import com.apalindromestring.shipmenttracker.shipment.domain.dtos.StatusUpdateMessage;
-import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
-import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentRepository;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
+import com.apalindromestring.shipmenttracker.shipment.domain.events.ShipmentStatusEvent;
+import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentRepository;
 import com.apalindromestring.shipmenttracker.shipment.services.ShipmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +21,9 @@ import java.util.UUID;
 public class ShipmentServiceImpl implements ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional
     public Shipment createShipment(CreateShipmentRequest createShipmentRequest) {
         Shipment newShipment = new Shipment();
         newShipment.setOrigin(createShipmentRequest.getOrigin());
@@ -33,7 +31,8 @@ public class ShipmentServiceImpl implements ShipmentService {
         newShipment.setTrackingNumber(generateTrackingNumber());
 
         Shipment savedShipment = shipmentRepository.save(newShipment);
-        notifyShipment(savedShipment, getStatusMessage(savedShipment.getStatus()));
+
+        eventPublisher.publishEvent(new ShipmentStatusEvent(savedShipment));
 
         return savedShipment;
     }
@@ -68,46 +67,13 @@ public class ShipmentServiceImpl implements ShipmentService {
             existingShipment.setCurrentLocation(updateStatusRequest.getCurrentLocation());
         }
         Shipment savedShipment = shipmentRepository.save(existingShipment);
-        notifyShipment(savedShipment, getStatusMessage(savedShipment.getStatus()));
+
+        eventPublisher.publishEvent(new ShipmentStatusEvent(savedShipment));
 
         return savedShipment;
     }
 
-    public void notifyShipment(Shipment shipment, String message) {
-        StatusUpdateMessage statusUpdateMessage = StatusUpdateMessage.builder()
-                .shipmentId(shipment.getId())
-                .trackingNumber(shipment.getTrackingNumber())
-                .status(shipment.getStatus())
-                .currentLocation(shipment.getCurrentLocation())
-                .timestamp(shipment.getUpdatedAt())
-                .message(message)
-                .build();
-
-        // Use case - Users watch all shipments
-        messagingTemplate.convertAndSend("/topic/shipments", statusUpdateMessage);
-
-        // Use case - Customer tracks their specific shipment
-        messagingTemplate.convertAndSend("/topic/shipments/" + shipment.getId(), statusUpdateMessage);
-        log.info("Sent shipment status update: {}", statusUpdateMessage);
-    }
-
-
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
-
-
-    private String getStatusMessage(ShipmentStatus status) {
-        return switch (status) {
-            case ORDER_PLACED -> "Order has been placed";
-            case PROCESSING -> "Order is being processed";
-            case PICKED_UP -> "Package has been picked up";
-            case IN_TRANSIT -> "Package is in transit";
-            case OUT_FOR_DELIVERY -> "Package is out for delivery";
-            case DELIVERED -> "Package has been delivered";
-            case EXCEPTION -> "Delivery failed";
-        };
-    }
-
-
 }

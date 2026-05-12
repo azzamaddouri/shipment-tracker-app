@@ -1,6 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.domain.dtos;
 
-import com.apalindromestring.shipmenttracker.shipment.domain.ShipmentStatus;
+import com.apalindromestring.shipmenttracker.shipment.domain.enums.ShipmentStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;

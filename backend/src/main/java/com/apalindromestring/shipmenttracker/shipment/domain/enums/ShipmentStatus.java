@@ -1,4 +1,4 @@
-package com.apalindromestring.shipmenttracker.shipment.domain;
+package com.apalindromestring.shipmenttracker.shipment.domain.enums;
 
 public enum ShipmentStatus {
     ORDER_PLACED,

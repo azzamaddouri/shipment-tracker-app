@@ -1,6 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.domain.entities;
 
-import com.apalindromestring.shipmenttracker.shipment.domain.ShipmentStatus;
+import com.apalindromestring.shipmenttracker.shipment.domain.enums.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
