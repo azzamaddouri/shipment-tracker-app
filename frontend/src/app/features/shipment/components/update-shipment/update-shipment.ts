@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ShipmentService } from '../../core/services/shipment/shipment-service';
-import { Shipment, SHIPMENT_STATUS, STATUS_LABELS } from '../../../../core/models/shipment.model';
+import { Shipment, SHIPMENT_STATUS, STATUS_LABELS, ShipmentService } from '../../../../core';
 import { CommonModule } from '@angular/common';
 import { catchError, of} from 'rxjs';
 

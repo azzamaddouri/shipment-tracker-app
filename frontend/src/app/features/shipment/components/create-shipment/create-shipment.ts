@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CreateShipmentRequest } from '../../../../core/models/shipment.model';
-import { ShipmentService } from '../../core/services/shipment/shipment-service';
-import { catchError, of } from 'rxjs';
+import { ShipmentService, CreateShipmentRequest } from '../../../../core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-create-shipment',
@@ -13,17 +13,22 @@ import { catchError, of } from 'rxjs';
 })
 export class CreateShipment {
 
+  private destroyRef = inject(DestroyRef);
+
   private fb = inject(FormBuilder);
   private shipmentService = inject(ShipmentService);
 
   shipmentForm :FormGroup = this.fb.group({
-    origin: ['', [Validators.required, Validators.minLength(3)]],
-    destination: ['', [Validators.required, Validators.minLength(3)]],
-    estimatedDelivery: ['']
+    origin: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
+    destination: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
+    estimatedDelivery: this.fb.nonNullable.control('')
   });
 
 
   isSubmitting = signal(false);
+  isSuccess = signal(false);
+  errorMessage = signal<string | null>(null);
+
 
 
   createShipment() : void {
@@ -33,16 +38,26 @@ export class CreateShipment {
     }
 
     this.isSubmitting.set(true);
-    const shipement : CreateShipmentRequest = this.shipmentForm.value;
+    this.errorMessage.set(null);
+    
+    const shipment : CreateShipmentRequest = this.shipmentForm.getRawValue();
 
-    this.shipmentService.createShipment(shipement)
-    .pipe(catchError(() => {
-      this.isSubmitting.set(false);
-      return of(null);
-    }))
-    .subscribe(()=>{
-      this.shipmentForm.reset();
-      this.isSubmitting.set(false);
+    this.shipmentService.createShipment(shipment)
+    .pipe( 
+      finalize(() => this.isSubmitting.set(false)),
+      takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: () => {
+        this.isSuccess.set(true);
+        this.shipmentForm.reset();
+        setTimeout(() => {
+          this.isSuccess.set(false);
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error creating shipment:', error);
+        this.errorMessage.set(error?.error?.message ?? 'Something went wrong. Please try again.');
+      },
     });
   }
 

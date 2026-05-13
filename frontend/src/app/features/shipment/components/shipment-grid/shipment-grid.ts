@@ -1,9 +1,9 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../../../core/models/shipment.model';
-import { DatePipe, NgClass } from '@angular/common';
+import { Shipment, SHIPMENT_STATUS, 
+  ShipmentStatus, STATUS_LABELS, StatusUpdateMessage, 
+  ShipmentWebsocketService, ShipmentService } from '../../../../core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ShipmentService } from '../../core/services/shipment/shipment-service';
-import { WebsocketService } from '../../../../core/services/shipment-websocket.service';
+import { DatePipe, NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-shipment-grid',
@@ -14,7 +14,7 @@ import { WebsocketService } from '../../../../core/services/shipment-websocket.s
 export class ShipmentGrid implements OnInit {
   private destroyRef = inject(DestroyRef);
   private shipmentService = inject(ShipmentService);
-  private webSocketService = inject(WebsocketService);
+  private webSocketService = inject(ShipmentWebsocketService);
   shipments = signal<Shipment[]>([]);
   STATUS_LABELS = STATUS_LABELS;
 

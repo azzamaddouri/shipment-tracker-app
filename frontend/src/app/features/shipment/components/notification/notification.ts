@@ -1,6 +1,9 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { WebsocketService } from '../../../../core/services/shipment-websocket.service';
-import { SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../../../core/models/shipment.model';
+import { SHIPMENT_STATUS, 
+  ShipmentStatus, 
+  STATUS_LABELS, 
+  StatusUpdateMessage,
+  ShipmentWebsocketService } from '../../../../core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 
@@ -13,7 +16,7 @@ import { CommonModule } from '@angular/common';
 export class Notification implements OnInit {
 
   private destroyRef = inject(DestroyRef);
-  private websocketService = inject(WebsocketService);
+  private websocketService = inject(ShipmentWebsocketService);
 
   STATUS_LABELS = STATUS_LABELS
   notifications = signal<StatusUpdateMessage[]>([]);
