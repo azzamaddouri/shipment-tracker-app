@@ -1,0 +1,11 @@
+export const SHIPMENT_STATUS = {
+    ORDER_PLACED: 'ORDER_PLACED',
+    PROCESSING: 'PROCESSING',
+    PICKED_UP: 'PICKED_UP',
+    IN_TRANSIT: 'IN_TRANSIT',
+    OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+    DELIVERED: 'DELIVERED',
+    EXCEPTION: 'EXCEPTION'
+} as const;
+
+export type ShipmentStatus = keyof typeof SHIPMENT_STATUS;

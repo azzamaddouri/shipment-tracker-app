@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { WebsocketService } from '../../services/websocket/websocket-service';
-import { SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../models/shipment.model';
+import { WebsocketService } from '../../../../core/services/shipment-websocket.service';
+import { SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../../../core/models/shipment.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 

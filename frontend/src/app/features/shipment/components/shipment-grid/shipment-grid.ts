@@ -1,9 +1,9 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../models/shipment.model';
+import { Shipment, SHIPMENT_STATUS, ShipmentStatus, STATUS_LABELS, StatusUpdateMessage } from '../../../../core/models/shipment.model';
 import { DatePipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ShipmentService } from '../../services/shipment/shipment-service';
-import { WebsocketService } from '../../services/websocket/websocket-service';
+import { ShipmentService } from '../../core/services/shipment/shipment-service';
+import { WebsocketService } from '../../../../core/services/shipment-websocket.service';
 
 @Component({
   selector: 'app-shipment-grid',

@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CreateShipmentRequest } from '../../models/shipment.model';
-import { ShipmentService } from '../../services/shipment/shipment-service';
+import { CreateShipmentRequest } from '../../../../core/models/shipment.model';
+import { ShipmentService } from '../../core/services/shipment/shipment-service';
 import { catchError, of } from 'rxjs';
 
 @Component({

@@ -1,12 +1,12 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { Client, StompSubscription, Versions } from '@stomp/stompjs';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { StatusUpdateMessage } from '../../models/shipment.model';
+import { StatusUpdateMessage } from '../models/shipment.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class WebsocketService {
+export class ShipmentWebsocketService {
   private destoryRef = inject(DestroyRef);
   private client!: Client;
   private connected$ = new BehaviorSubject<boolean>(false);

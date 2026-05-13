@@ -1,9 +1,9 @@
 import { Component, signal } from '@angular/core';
-import { ShipmentGrid } from './components/shipment-grid/shipment-grid';
-import { CreateShipment } from './components/create-shipment/create-shipment';
-import { UpdateShipment } from './components/update-shipment/update-shipment';
-import { Header } from './components/header/header';
-import { Notification } from './components/notification/notification';
+import { ShipmentGrid } from './features/shipment/components/shipment-grid/shipment-grid';
+import { CreateShipment } from './features/shipment/components/create-shipment/create-shipment';
+import { UpdateShipment } from './features/shipment/components/update-shipment/update-shipment';
+import { Header } from './features/shipment/components/header/header';
+import { Notification } from './features/shipment/components/notification/notification';
 
 @Component({
   selector: 'app-root',
