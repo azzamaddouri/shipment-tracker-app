@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateShipmentDto, ShipmentService,  } from '../../../../core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,21 +13,18 @@ import { finalize } from 'rxjs';
 })
 export class CreateShipment {
 
+  readonly created = output<void>()
+  
+
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder);
-  private readonly shipmentService = inject(ShipmentService);
+  readonly shipmentService = inject(ShipmentService);
 
-  shipmentForm :FormGroup = this.fb.group({
-    origin: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
-    destination: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
-    estimatedDelivery: this.fb.nonNullable.control('')
+  readonly shipmentForm :FormGroup = this.fb.nonNullable.group({
+    origin: ['', [Validators.required, Validators.minLength(3)]],
+    destination: ['', [Validators.required, Validators.minLength(3)]],
+    estimatedDelivery: ['']
   });
-
-  isSuccess = signal(false);
-
-  isSubmitting = this.shipmentService.loading;
-  errorMessage = this.shipmentService.error;
-
 
 
   createShipment() : void {
@@ -36,18 +33,9 @@ export class CreateShipment {
       return;
     }
     
-    const shipment : CreateShipmentDto = this.shipmentForm.getRawValue();
-
-    this.shipmentService.createShipment(shipment)
-    .pipe(takeUntilDestroyed(this.destroyRef))
+    this.shipmentService.createShipment(this.shipmentForm.getRawValue() as CreateShipmentDto)
     .subscribe({
-      next: () => {
-        this.isSuccess.set(true);
-        this.shipmentForm.reset();
-        setTimeout(() => {
-          this.isSuccess.set(false);
-        }, 3000);
-      },
+      next: () => { this.shipmentForm.reset(); this.created.emit(); },
     });
   }
 

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { catchError, EMPTY, Observable, Subject, switchMap, tap } from 'rxjs';
-import { CreateShipmentDto, Shipment, ShipmentWebSocketService } from '..';
+import { CreateShipmentDto, Shipment, ShipmentWebSocketService, UpdateStatusDto } from '..';
 import { environment } from '../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -79,14 +79,36 @@ export class ShipmentService {
   createShipment(dto: CreateShipmentDto) : Observable<Shipment>{
     this._patchState({ loading: true, error: null });
     return this.http.post<Shipment>(BASE_URL, dto).pipe(
-      tap((shipment) => {
+      tap((newShipment) => {
         this._patchState({
-          shipments: [shipment, ...this._state().shipments],
+          shipments: [newShipment, ...this._state().shipments],
           loading: false,
         });
       }),
       catchError((err) => {
         this._patchState({ loading: false, error: err.message ?? 'Failed to create shipment' });
+        return EMPTY;
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    )
+
+  }
+
+  updateShipmentStatus(id : number, dto: UpdateStatusDto ){
+     this._patchState({ loading: true, error: null });
+     return  this.http.put<Shipment>(`${BASE_URL}/${id}/status`, dto).pipe(
+      tap((updatedShipment) => {
+        this._patchState({
+          loading: false,
+          shipments: this._state().shipments.map((s) => (s.id === id ? updatedShipment : s)),
+          selectedShipment: this._state().selectedShipment?.id === id
+            ? updatedShipment
+            : this._state().selectedShipment,
+        })
+
+      }) ,
+     catchError((err) => {
+        this._patchState({ loading: false, error: err.message ?? `Failed to update shipment #${id}` });
         return EMPTY;
       }),
       takeUntilDestroyed(this.destroyRef)
@@ -108,9 +130,5 @@ export class ShipmentService {
   
   getShipmentByTrackingNumber(trackingNumber: string): Observable<Shipment> {
     return this.http.get<Shipment>(`${BASE_URL}/track/${trackingNumber}`);
-  }
-
-  updateShipmentStatus(id: number, statusUpdateRequest: any): Observable<Shipment> {
-    return this.http.put<Shipment>(`${BASE_URL}/${id}/status`, statusUpdateRequest);
   }
 }

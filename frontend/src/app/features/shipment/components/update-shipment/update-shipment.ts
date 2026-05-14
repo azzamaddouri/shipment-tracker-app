@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Shipment, SHIPMENT_STATUS, STATUS_LABELS, ShipmentService } from '../../../../core';
+import {  SHIPMENT_STATUS, STATUS_LABELS, ShipmentService, UpdateStatusDto } from '../../../../core';
 import { CommonModule } from '@angular/common';
-import { catchError, of} from 'rxjs';
 
 @Component({
   selector: 'app-update-shipment',
@@ -13,7 +12,10 @@ import { catchError, of} from 'rxjs';
 export class UpdateShipment implements OnInit {
 
   private fb = inject(FormBuilder);
-  private shipmentService = inject(ShipmentService);
+  readonly shipmentService = inject(ShipmentService);
+
+
+  readonly shipments = this.shipmentService.shipments;
 
   updateForm = this.fb.group({
     shipmentId: [null, Validators.required],
@@ -23,28 +25,23 @@ export class UpdateShipment implements OnInit {
 
   STATUS_LABELS = STATUS_LABELS;
   statusOptions = Object.values(SHIPMENT_STATUS);
-  shipments = signal<Shipment[]>([]);
-  errorMessage = signal<string>('');
-  isLoading = signal<boolean>(false);
-  isSubmitting = signal<boolean>(false);
+
+
+  ngOnInit(): void {
+  this.shipmentService.loadAll();
+ }
+
 
   updateShipment() : void  {
-    if (this.updateForm.invalid || this.isSubmitting()) {
+    if (this.updateForm.invalid || this.shipmentService.loading()) {
       this.updateForm.markAllAsTouched();
       return;
     }
 
-    this.isSubmitting.set(true);
-    this.errorMessage.set('');
 
-    const { shipmentId, status, currentLocation } = this.updateForm.value;
+    const { shipmentId, status, currentLocation } = this.updateForm.getRawValue();
     
-    /* this.shipmentService.updateShipmentStatus(shipmentId!, { status, currentLocation })
-    .pipe(
-      catchError((error) => {
-        this.errorMessage.set('Failed to update shipment status. Please try again later.');
-        return of(null);
-      }))
+    this.shipmentService.updateShipmentStatus(shipmentId!, { status, currentLocation } as UpdateStatusDto)
     .subscribe((shipment) => {
       if (shipment !== null) {
         this.updateForm.reset({
@@ -52,32 +49,10 @@ export class UpdateShipment implements OnInit {
           status: SHIPMENT_STATUS.PROCESSING,
           currentLocation: '',
         });}
-      this.isSubmitting.set(false);
-    }); */
+    });
   }
 
- ngOnInit(): void {
-   this.loadShipments();
- }
 
- loadShipments(): void {
-
-  this.isLoading.set(true);
-  this.errorMessage.set('');
-
-  /* this.shipmentService.getAllShipments()
-  .pipe(
-    catchError((error) => {
-      this.errorMessage.set('Failed to load shipments. Please try again later.');
-      return of([]);
-    }),)
-  .subscribe((shipments) => {
-    this.shipments.set(shipments);
-    this.isLoading.set(false);
-  }); */
-
-  
- }
  onSelectShipmentId(): void {
 
   const shipmentId = this.updateForm.get('shipmentId')?.value;

@@ -15,11 +15,8 @@ export interface Shipment {
 export type CreateShipmentDto = Omit<Shipment, 
 'id' |'trackingNumber' | 'status' |'createdAt'|'updatedAt'|'currentLocation'>;
 
-
-export interface UpdateStatusRequest {
-    status: ShipmentStatus;
-    currentLocation?: string;
-};
+export type UpdateStatusDto = Omit<Shipment, 
+'id' |'trackingNumber' |'origin' | 'destination' |'createdAt'|'updatedAt'|'estimatedDelivery'>;
 
 export interface StatusUpdateMessage{
     shipmentId: number;
