@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { Shipment, SHIPMENT_STATUS, 
   ShipmentStatus, STATUS_LABELS, StatusUpdateMessage, 
-  ShipmentWebsocketService, ShipmentService } from '../../../../core';
+  ShipmentWebSocketService, ShipmentService } from '../../../../core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, NgClass } from '@angular/common';
 
@@ -12,10 +12,17 @@ import { DatePipe, NgClass } from '@angular/common';
   styleUrl: './shipment-grid.css',
 })
 export class ShipmentGrid implements OnInit {
-  private destroyRef = inject(DestroyRef);
+  
   private shipmentService = inject(ShipmentService);
-  private webSocketService = inject(ShipmentWebsocketService);
-  shipments = signal<Shipment[]>([]);
+
+
+  readonly shipments = this.shipmentService.shipments;
+  readonly loading = this.shipmentService.loading;
+  readonly error = this.shipmentService.error;
+
+  
+  private destroyRef = inject(DestroyRef);
+  private webSocketService = inject(ShipmentWebSocketService);
   STATUS_LABELS = STATUS_LABELS;
 
   readonly STATUS_BADGE_CLASS_MAP: Record<ShipmentStatus, string> = {
@@ -29,15 +36,11 @@ export class ShipmentGrid implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadShipment();
-    this.connectWebSocket();
+    this.shipmentService.loadAll();
+
+    this.handleUpdate();
 
     console.log('RUNNING');
-  }
-
-  private connectWebSocket(): void {
-    this.webSocketService.connect();
-    this.handleUpdate();
   }
 
   private handleUpdate(): void {
@@ -45,14 +48,12 @@ export class ShipmentGrid implements OnInit {
       .getStatusUpdates()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((update) => {
-        if (update) {
           this.handleStatusUpdate(update);
-        }
       });
   }
 
   private handleStatusUpdate(update: StatusUpdateMessage): void {
-    this.shipments.update((shipments) => {
+   /*  this.shipments.update((shipments) => {
       const updatedShipment = shipments.find((shipment) => shipment.id === update.shipmentId);
       if (!updatedShipment) {
         return shipments;
@@ -70,14 +71,10 @@ export class ShipmentGrid implements OnInit {
       });
 
       return updatedShipments;
-    });
+    }); */
   }
 
-  loadShipment(): void {
-    this.shipmentService.getAllShipments().subscribe((shipments) => {
-      this.shipments.set(shipments);
-    });
-  }
+
 
   getStatusBadgeClass(status: ShipmentStatus): string {
     return this.STATUS_BADGE_CLASS_MAP[status];

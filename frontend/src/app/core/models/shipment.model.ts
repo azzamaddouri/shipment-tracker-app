@@ -12,11 +12,9 @@ export interface Shipment {
     estimatedDelivery?: string;
 };
 
-export interface CreateShipmentRequest {
-    origin: string;
-    destination: string;
-    estimatedDelivery?: string;
-};
+export type CreateShipmentDto = Omit<Shipment, 
+'id' |'trackingNumber' | 'status' |'createdAt'|'updatedAt'|'currentLocation'>;
+
 
 export interface UpdateStatusRequest {
     status: ShipmentStatus;

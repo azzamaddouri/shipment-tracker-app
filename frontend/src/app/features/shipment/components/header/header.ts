@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { ShipmentWebsocketService } from '../../../../core';
+import { ShipmentWebSocketService } from '../../../../core';
 import { pipe } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 })
 export class Header implements OnInit {
   private destroyRef = inject(DestroyRef);
-  private websocketService = inject(ShipmentWebsocketService);
+  private websocketService = inject(ShipmentWebSocketService);
   title = 'Shipment Tracker';
   isConnected = signal(false);
 

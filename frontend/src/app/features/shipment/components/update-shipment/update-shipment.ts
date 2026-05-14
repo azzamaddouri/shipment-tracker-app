@@ -39,7 +39,7 @@ export class UpdateShipment implements OnInit {
 
     const { shipmentId, status, currentLocation } = this.updateForm.value;
     
-    this.shipmentService.updateShipmentStatus(shipmentId!, { status, currentLocation })
+    /* this.shipmentService.updateShipmentStatus(shipmentId!, { status, currentLocation })
     .pipe(
       catchError((error) => {
         this.errorMessage.set('Failed to update shipment status. Please try again later.');
@@ -53,7 +53,7 @@ export class UpdateShipment implements OnInit {
           currentLocation: '',
         });}
       this.isSubmitting.set(false);
-    });
+    }); */
   }
 
  ngOnInit(): void {
@@ -65,7 +65,7 @@ export class UpdateShipment implements OnInit {
   this.isLoading.set(true);
   this.errorMessage.set('');
 
-  this.shipmentService.getAllShipments()
+  /* this.shipmentService.getAllShipments()
   .pipe(
     catchError((error) => {
       this.errorMessage.set('Failed to load shipments. Please try again later.');
@@ -74,7 +74,7 @@ export class UpdateShipment implements OnInit {
   .subscribe((shipments) => {
     this.shipments.set(shipments);
     this.isLoading.set(false);
-  });
+  }); */
 
   
  }

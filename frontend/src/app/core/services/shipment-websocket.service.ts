@@ -1,25 +1,28 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { Client, StompSubscription, Versions } from '@stomp/stompjs';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { StatusUpdateMessage } from '../models/shipment.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ShipmentWebsocketService {
-  private destoryRef = inject(DestroyRef);
+export class ShipmentWebSocketService {
+  private destroyRef = inject(DestroyRef);
   private client!: Client;
   private connected$ = new BehaviorSubject<boolean>(false);
-  private stausUpdate$ = new BehaviorSubject<null | StatusUpdateMessage>(null);
+  private statusUpdate$ = new Subject<StatusUpdateMessage>();
   private subscriptions = new Map<string, StompSubscription>();
 
   constructor() {
 
     this.initClient();
+    this.client.activate();
 
-    this.destoryRef.onDestroy(() => {
+
+    this.destroyRef.onDestroy(() => {
       this.disconnect();
-      this.stausUpdate$.complete();
+      this.statusUpdate$.complete();
       this.connected$.complete();
     });
 
@@ -28,7 +31,7 @@ export class ShipmentWebsocketService {
   initClient(): void {
 
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws',
+      brokerURL: environment.api.webSocketUrl,
       stompVersions: Versions.default,
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -38,7 +41,7 @@ export class ShipmentWebsocketService {
       onConnect: (frame) => {
         console.log('[WebSocket] Connected: ' + frame);
         this.connected$.next(true);
-        this.subscripeToTopics();
+        this.subscribeToTopics();
       },
 
       onDisconnect: (frame) => {
@@ -65,12 +68,12 @@ export class ShipmentWebsocketService {
     });
   }
 
-  private subscripeToTopics(): void {
+  private subscribeToTopics(): void {
     const subscription = this.client.subscribe('/topic/shipments', (stompMessageFrame) => {
       try {
         const statusUpdateMessage = JSON.parse(stompMessageFrame.body) as StatusUpdateMessage;
         console.log('[WebSocket] Received update:', statusUpdateMessage);
-        this.stausUpdate$.next(statusUpdateMessage);
+        this.statusUpdate$.next(statusUpdateMessage);
       } catch (error) {
         console.error('[WebSocket] Failed to parse message:', error);
       }
@@ -78,15 +81,6 @@ export class ShipmentWebsocketService {
 
     this.subscriptions.set('/topic/shipments', subscription);
   } 
-
-  connect(): void {
-    if (this.client.active) {
-      console.log('[Websocket] Already connected or connecting');
-      return;
-    }
-
-    this.client.activate();
-  }
 
   disconnect(): void {
     if (this.client.active) {
@@ -103,8 +97,8 @@ export class ShipmentWebsocketService {
     }
   }
 
-  getStatusUpdates(): Observable<StatusUpdateMessage | null> {
-    return this.stausUpdate$.asObservable();
+  getStatusUpdates(): Observable<StatusUpdateMessage> {
+    return this.statusUpdate$.asObservable();
   }
 
   isConnected(): Observable<boolean> {

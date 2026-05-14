@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ShipmentService, CreateShipmentRequest } from '../../../../core';
+import { CreateShipmentDto, ShipmentService,  } from '../../../../core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 
@@ -16,7 +16,8 @@ export class CreateShipment {
   private destroyRef = inject(DestroyRef);
 
   private fb = inject(FormBuilder);
-  private shipmentService = inject(ShipmentService);
+
+  private readonly shipmentService = inject(ShipmentService);
 
   shipmentForm :FormGroup = this.fb.group({
     origin: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
@@ -40,7 +41,7 @@ export class CreateShipment {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
     
-    const shipment : CreateShipmentRequest = this.shipmentForm.getRawValue();
+    const shipment : CreateShipmentDto = this.shipmentForm.getRawValue();
 
     this.shipmentService.createShipment(shipment)
     .pipe( 

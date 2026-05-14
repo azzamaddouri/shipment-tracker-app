@@ -1,115 +1,120 @@
-<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
-  @for (shipment of shipments(); track shipment.id) {
-    <div
-      class="group rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-lg hover:border-zinc-700 transition-colors"
+<div class="shipment-grid mt-6">
+
+  @for (shipment of shipments(); track shipment.id; let i = $index) {
+    <article
+      class="shipment-card"
+      [style.--card-index]="i"
+      [attr.data-status]="shipment.status"
     >
-      <div class="flex items-start justify-between mb-4">
-        <div>
-          <p class="font-mono text-sm font-semibold text-white">
-            {{ shipment.trackingNumber }}
-          </p>
-          <p class="text-xs text-zinc-500 mt-1">{{ shipment.updatedAt | date: 'short' }}</p>
+      
+      <div class="card-accent-bar"></div>
+
+     
+      <header class="card-header">
+        <div class="tracking-block">
+          <span class="tracking-label">TRK</span>
+          <span class="tracking-number">{{ shipment.trackingNumber }}</span>
         </div>
         <span
-          class="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+          class="status-pill"
           [ngClass]="getStatusBadgeClass(shipment.status)"
         >
+          <span class="status-dot"></span>
           {{ STATUS_LABELS[shipment.status] }}
         </span>
+      </header>
+
+      
+      <div class="route-block">
+        <div class="route-node">
+          <span class="route-icon origin-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="3" stroke-width="2.5"/>
+              <path stroke-linecap="round" stroke-width="2" d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            </svg>
+          </span>
+          <div class="route-text">
+            <span class="route-meta">ORIGIN</span>
+            <span class="route-value">{{ shipment.origin }}</span>
+          </div>
+        </div>
+
+        <div class="route-connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </div>
+          <div class="connector-line"></div>
+        </div>
+
+        <div class="route-node">
+          <span class="route-icon destination-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <circle cx="12" cy="11" r="3" stroke-width="2"/>
+            </svg>
+          </span>
+          <div class="route-text">
+            <span class="route-meta">DESTINATION</span>
+            <span class="route-value">{{ shipment.destination }}</span>
+          </div>
+        </div>
       </div>
 
-      <div class="space-y-2 text-sm mb-4">
-        <div class="flex items-start gap-2">
-          <svg
-            class="h-4 w-4 mt-0.5 text-zinc-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 10l7-7m0 0l7 7m-7-7v18"
-            />
-          </svg>
-          <span class="text-zinc-400">{{ shipment.origin }}</span>
-        </div>
-        <div class="flex items-start gap-2">
-          <svg
-            class="h-4 w-4 mt-0.5 text-zinc-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-          <span class="text-zinc-400">{{ shipment.destination }}</span>
-        </div>
-        <div class="flex items-start gap-2">
-          <svg
-            class="h-4 w-4 mt-0.5 text-white shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span class="text-white">{{ shipment.currentLocation }}</span>
-        </div>
-        @if (shipment.estimatedDelivery) {
-          <div class="flex items-start gap-2">
-            <svg
-              class="h-4 w-4 mt-0.5 text-zinc-500 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+      
+      <footer class="card-footer">
+        <div class="footer-item">
+          <span class="footer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="3" stroke-width="2"/>
+              <path stroke-linecap="round" stroke-width="2" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
             </svg>
-            <span class="text-zinc-400">{{ shipment.estimatedDelivery }}</span>
+          </span>
+          <div>
+            <span class="footer-label">CURRENT LOCATION</span>
+            <span class="footer-value highlight">{{ shipment.currentLocation }}</span>
           </div>
-        }
-      </div>
-    </div>
+        </div>
+
+        <div class="footer-divider"></div>
+
+        <div class="footer-item">
+          <span class="footer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <path stroke-linecap="round" stroke-width="2" d="M12 7v5l3 3"/>
+            </svg>
+          </span>
+          <div>
+            @if (shipment.estimatedDelivery) {
+              <span class="footer-label">EST. DELIVERY</span>
+              <span class="footer-value">{{ shipment.estimatedDelivery | date: 'MMM d, y' }}</span>
+            } @else {
+              <span class="footer-label">UPDATED</span>
+              <span class="footer-value">{{ shipment.updatedAt | date: 'MMM d · HH:mm' }}</span>
+            }
+          </div>
+        </div>
+      </footer>
+
+    </article>
   } @empty {
-    <div class="col-span-full rounded-lg border border-dashed border-zinc-800 p-12 text-center">
-      <svg
-        class="mx-auto h-12 w-12 text-zinc-600"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-        />
-      </svg>
-      <h3 class="mt-4 text-lg font-semibold text-white">No shipments yet</h3>
-      <p class="mt-2 text-sm text-zinc-500">Create your first shipment to get started.</p>
+
+    <div class="empty-state">
+      <div class="empty-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        <div class="empty-ping"></div>
+      </div>
+      <p class="empty-title">NO ACTIVE SHIPMENTS</p>
+      <p class="empty-sub">Create your first shipment to begin tracking.</p>
     </div>
+
   }
+
 </div>

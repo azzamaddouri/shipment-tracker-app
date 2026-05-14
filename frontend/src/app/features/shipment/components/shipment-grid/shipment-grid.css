@@ -1,0 +1,386 @@
+/* ─── Google Font import ─── */
+/* Add to index.html: 
+   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+*/
+
+/* ─── Grid container ─── */
+.shipment-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+/* ─── Card ─── */
+.shipment-card {
+  position: relative;
+  background: #0f0f11;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  animation: cardReveal 0.4s ease both;
+  animation-delay: calc(var(--card-index, 0) * 60ms);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.shipment-card:hover {
+  border-color: #3f3f46;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Scanline texture overlay */
+.shipment-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.012) 2px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Accent bar (status-colored) ─── */
+.card-accent-bar {
+  height: 2px;
+  width: 100%;
+  background: var(--accent, #3f3f46);
+  transition: background 0.3s ease;
+}
+
+/* Status-driven accent colors via [data-status] */
+[data-status="ORDER_PLACED"]      .card-accent-bar { background: #3b82f6; }
+[data-status="PROCESSING"]        .card-accent-bar { background: #f59e0b; }
+[data-status="PICKED_UP"]         .card-accent-bar { background: #a855f7; }
+[data-status="IN_TRANSIT"]        .card-accent-bar { background: #06b6d4; }
+[data-status="OUT_FOR_DELIVERY"]  .card-accent-bar { background: #eab308; }
+[data-status="DELIVERED"]         .card-accent-bar { background: #22c55e; }
+[data-status="EXCEPTION"]         .card-accent-bar { background: #ef4444; }
+
+/* ─── Card inner padding wrapper ─── */
+.card-header,
+.route-block,
+.card-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Header ─── */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #1c1c1e;
+}
+
+.tracking-block {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.tracking-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #52525b;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.tracking-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e4e4e7;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Status pill ─── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-family: 'IBM Plex Mono', monospace;
+  ring: 1px inset;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+/* Reuse existing Tailwind ring classes from component TS */
+.bg-blue-500\/10   { background: rgba(59,130,246,.12); }
+.text-blue-400     { color: #60a5fa; }
+.ring-blue-500\/20 { box-shadow: inset 0 0 0 1px rgba(59,130,246,.25); }
+
+.bg-amber-500\/10   { background: rgba(245,158,11,.12); }
+.text-amber-400     { color: #fbbf24; }
+.ring-amber-500\/20 { box-shadow: inset 0 0 0 1px rgba(245,158,11,.25); }
+
+.bg-purple-500\/10   { background: rgba(168,85,247,.12); }
+.text-purple-400     { color: #c084fc; }
+.ring-purple-500\/20 { box-shadow: inset 0 0 0 1px rgba(168,85,247,.25); }
+
+.bg-cyan-500\/10   { background: rgba(6,182,212,.12); }
+.text-cyan-400     { color: #22d3ee; }
+.ring-cyan-500\/20 { box-shadow: inset 0 0 0 1px rgba(6,182,212,.25); }
+
+.bg-yellow-500\/10   { background: rgba(234,179,8,.12); }
+.text-yellow-400     { color: #facc15; }
+.ring-yellow-500\/20 { box-shadow: inset 0 0 0 1px rgba(234,179,8,.25); }
+
+.bg-green-500\/10   { background: rgba(34,197,94,.12); }
+.text-green-400     { color: #4ade80; }
+.ring-green-500\/20 { box-shadow: inset 0 0 0 1px rgba(34,197,94,.25); }
+
+.bg-red-500\/10   { background: rgba(239,68,68,.12); }
+.text-red-400     { color: #f87171; }
+.ring-red-500\/20 { box-shadow: inset 0 0 0 1px rgba(239,68,68,.25); }
+
+/* ─── Route block ─── */
+.route-block {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #1c1c1e;
+}
+
+.route-node {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.route-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.route-icon svg {
+  width: 14px;
+  height: 14px;
+  color: #71717a;
+}
+
+.origin-icon svg      { color: #6366f1; }
+.destination-icon svg { color: #06b6d4; }
+
+.route-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.route-meta {
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: #52525b;
+  font-weight: 600;
+}
+
+.route-value {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+}
+
+/* Connector between nodes */
+.route-connector {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.connector-line {
+  width: 12px;
+  height: 1px;
+  background: #3f3f46;
+}
+
+.connector-arrow {
+  width: 14px;
+  height: 14px;
+  color: #52525b;
+}
+
+.connector-arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Footer ─── */
+.card-footer {
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #0c0c0e;
+}
+
+.footer-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.footer-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-icon svg {
+  width: 13px;
+  height: 13px;
+  color: #3f3f46;
+}
+
+.footer-item div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.footer-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  color: #52525b;
+  font-weight: 600;
+}
+
+.footer-value {
+  font-size: 0.7rem;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+}
+
+.footer-value.highlight {
+  color: #e4e4e7;
+}
+
+.footer-divider {
+  width: 1px;
+  height: 28px;
+  background: #27272a;
+  margin: 0 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  border: 1px dashed #27272a;
+  border-radius: 10px;
+  background: #0c0c0e;
+  gap: 0.75rem;
+  animation: cardReveal 0.4s ease both;
+}
+
+.empty-icon-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.empty-icon-wrap svg {
+  width: 40px;
+  height: 40px;
+  color: #3f3f46;
+}
+
+.empty-ping {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid #27272a;
+  animation: ping 2.5s ease-out infinite;
+}
+
+.empty-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #52525b;
+  margin: 0;
+}
+
+.empty-sub {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.8rem;
+  color: #3f3f46;
+  margin: 0;
+}
+
+/* ─── Animations ─── */
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes ping {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
