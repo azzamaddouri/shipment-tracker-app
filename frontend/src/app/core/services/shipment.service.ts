@@ -75,16 +75,31 @@ export class ShipmentService {
     this._loadAll$.next();
   }
 
+
+  createShipment(dto: CreateShipmentDto) : Observable<Shipment>{
+    this._patchState({ loading: true, error: null });
+    return this.http.post<Shipment>(BASE_URL, dto).pipe(
+      tap((shipment) => {
+        this._patchState({
+          shipments: [shipment, ...this._state().shipments],
+          loading: false,
+        });
+      }),
+      catchError((err) => {
+        this._patchState({ loading: false, error: err.message ?? 'Failed to create shipment' });
+        return EMPTY;
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    )
+
+  }
+
   private _patchState(partial: Partial<ShipmentState>): void {
     this._state.update(state => ({...state, ...partial}))
   }
 
 
-  createShipment(dto: CreateShipmentDto): Observable<Shipment> {
-    return this.http.post<Shipment>(BASE_URL, dto).pipe(
-      
-    );
-  }
+ 
 
 
   getShipmentById(id: number): Observable<Shipment> {

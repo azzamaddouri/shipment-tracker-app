@@ -14,9 +14,7 @@ import { finalize } from 'rxjs';
 export class CreateShipment {
 
   private destroyRef = inject(DestroyRef);
-
   private fb = inject(FormBuilder);
-
   private readonly shipmentService = inject(ShipmentService);
 
   shipmentForm :FormGroup = this.fb.group({
@@ -25,10 +23,10 @@ export class CreateShipment {
     estimatedDelivery: this.fb.nonNullable.control('')
   });
 
-
-  isSubmitting = signal(false);
   isSuccess = signal(false);
-  errorMessage = signal<string | null>(null);
+
+  isSubmitting = this.shipmentService.loading;
+  errorMessage = this.shipmentService.error;
 
 
 
@@ -37,16 +35,11 @@ export class CreateShipment {
       this.shipmentForm.markAllAsTouched();
       return;
     }
-
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
     
     const shipment : CreateShipmentDto = this.shipmentForm.getRawValue();
 
     this.shipmentService.createShipment(shipment)
-    .pipe( 
-      finalize(() => this.isSubmitting.set(false)),
-      takeUntilDestroyed(this.destroyRef))
+    .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
       next: () => {
         this.isSuccess.set(true);
@@ -54,10 +47,6 @@ export class CreateShipment {
         setTimeout(() => {
           this.isSuccess.set(false);
         }, 3000);
-      },
-      error: (error) => {
-        console.error('Error creating shipment:', error);
-        this.errorMessage.set(error?.error?.message ?? 'Something went wrong. Please try again.');
       },
     });
   }
