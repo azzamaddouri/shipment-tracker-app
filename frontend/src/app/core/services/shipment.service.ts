@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { catchError, EMPTY, Observable, Subject, switchMap, tap } from 'rxjs';
-import { CreateShipmentDto, Shipment, ShipmentStatus, ShipmentWebSocketService, UpdateStatusDto } from '..';
+import { CreateShipmentDto, Shipment, ShipmentStatus, ShipmentWebSocketService, STATUS_LABELS, UpdateStatusDto } from '..';
 import { environment } from '../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -162,7 +162,7 @@ export class ShipmentService {
           trackingNumber:  update.trackingNumber,
           status:          update.status,
           currentLocation: update.currentLocation,
-          message:         `Status updated to ${update.status}`,
+          message:         `Status updated to ${STATUS_LABELS[update.status]}`,
           timestamp:       update.timestamp,
         });
       });
