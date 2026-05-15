@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './update-shipment.html',
   styleUrl: './update-shipment.css',
 })
-export class UpdateShipment implements OnInit {
+export class UpdateShipmentComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   readonly shipmentService = inject(ShipmentService);

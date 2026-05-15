@@ -11,7 +11,7 @@ import { finalize } from 'rxjs';
   templateUrl: './create-shipment.html',
   styleUrl: './create-shipment.css',
 })
-export class CreateShipment {
+export class CreateShipmentComponent {
 
   readonly created = output<void>()
   

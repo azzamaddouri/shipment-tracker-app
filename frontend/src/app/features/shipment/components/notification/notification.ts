@@ -9,11 +9,11 @@ import {
 
 @Component({
   selector: 'app-notification',
-  imports: [DatePipe, NgClass],          // ← replace CommonModule
+  imports: [DatePipe, NgClass],         
   templateUrl: './notification.html',
   styleUrl:    './notification.css',
 })
-export class NotificationComponent {    // ← rename: 'Notification' conflicts with browser's Notification API
+export class NotificationComponent {
   private readonly shipmentService = inject(ShipmentService);
 
   readonly notifications    = this.shipmentService.notifications;
