@@ -10,19 +10,12 @@ import { CommonModule } from '@angular/common';
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
-export class Header implements OnInit {
+export class Header  {
   private destroyRef = inject(DestroyRef);
   private websocketService = inject(ShipmentWebSocketService);
   title = 'Shipment Tracker';
   isConnected = signal(false);
 
 
-  ngOnInit(): void {
-    this.websocketService.isConnected()
-    .pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      (connected) => {
-        this.isConnected.set(connected);
-      }
-    );
-  }
+  
 }

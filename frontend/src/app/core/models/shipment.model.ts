@@ -1,4 +1,4 @@
-import { ShipmentStatus, SHIPMENT_STATUS } from "../enums/shipment-status.enum";
+import { ShipmentStatus } from "../enums/shipment-status.enum";
 
 export interface Shipment {
     id: number;
@@ -17,13 +17,3 @@ export type CreateShipmentDto = Omit<Shipment,
 
 export type UpdateStatusDto = Omit<Shipment, 
 'id' |'trackingNumber' |'origin' | 'destination' |'createdAt'|'updatedAt'|'estimatedDelivery'>;
-
-export interface StatusUpdateMessage{
-    shipmentId: number;
-    trackingNumber: string;
-    status: ShipmentStatus;
-    currentLocation: string;
-    timestamp: string;
-    message: string;
-
-};

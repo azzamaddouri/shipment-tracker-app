@@ -24,6 +24,7 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public Shipment createShipment(CreateShipmentRequest createShipmentRequest) {
         Shipment newShipment = new Shipment();
         newShipment.setOrigin(createShipmentRequest.getOrigin());
