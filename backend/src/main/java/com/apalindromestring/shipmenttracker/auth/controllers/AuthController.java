@@ -3,6 +3,7 @@ package com.apalindromestring.shipmenttracker.auth.controllers;
 import com.apalindromestring.shipmenttracker.auth.domain.dtos.AuthResponse;
 import com.apalindromestring.shipmenttracker.auth.domain.dtos.LoginRequest;
 import com.apalindromestring.shipmenttracker.auth.services.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,8 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest loginRequest) {
         String token = authenticationService.authenticate(
                 loginRequest.getEmail(), loginRequest.getPassword());
         return ResponseEntity.ok(new AuthResponse(token));
