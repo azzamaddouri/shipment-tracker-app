@@ -1,11 +1,7 @@
 package com.apalindromestring.shipmenttracker.config;
 
-import com.apalindromestring.shipmenttracker.auth.domain.entities.User;
-import com.apalindromestring.shipmenttracker.auth.domain.enums.Role;
-import com.apalindromestring.shipmenttracker.auth.repositories.UserRepository;
 import com.apalindromestring.shipmenttracker.auth.security.JwtAuthenticationFilter;
-import com.apalindromestring.shipmenttracker.auth.security.ShipmentUserDetailsService;
-import com.apalindromestring.shipmenttracker.auth.services.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +9,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -40,6 +35,23 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/v1/shipments/**").hasAnyRole("ADMIN", "CARRIER")
                         .anyRequest().authenticated())
+                // returns JSON response instead of HTML error page - good for the frontend
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("""
+                                    {"status":401,"error":"Unauthorized","message":"Authentication required","path":"%s"}
+                                    """.formatted(request.getRequestURI()));
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.getWriter().write("""
+                                    {"status":403,"error":"Forbidden","message":"You do not have permission to access this resource.","path":"%s"}
+                                    """.formatted(request.getRequestURI()));
+                        }))
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,15 +1,11 @@
 package com.apalindromestring.shipmenttracker.auth.services;
 
-import com.apalindromestring.shipmenttracker.auth.domain.entities.User;
-import com.apalindromestring.shipmenttracker.auth.repositories.UserRepository;
 import com.apalindromestring.shipmenttracker.auth.security.ShipmentUserDetails;
+import com.apalindromestring.shipmenttracker.exception.domain.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +23,6 @@ public class AuthenticationService {
             return jwtService.generateToken(userDetails.getUser());
 
         }
-        throw new IllegalStateException("Unexpected principal type");
+        throw new UnauthorizedException("Authentication failed: unexpected principal type");
     }
 }

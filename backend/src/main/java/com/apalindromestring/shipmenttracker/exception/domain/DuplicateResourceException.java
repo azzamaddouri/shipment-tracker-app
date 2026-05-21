@@ -1,7 +1,7 @@
 package com.apalindromestring.shipmenttracker.exception.domain;
 
-public class DublicatedResourceException extends RuntimeException {
-  public DublicatedResourceException(String message) {
-    super(message);
-  }
+public class DuplicateResourceException extends RuntimeException {
+    public DuplicateResourceException(String message) {
+        super(message);
+    }
 }
