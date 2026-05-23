@@ -1,3 +1,5 @@
+export * from './interceptors/auth/auth.interceptor';
+export * from './interceptors/error/error.interceptor';
 export * from './enums/shipment-status.enum';
 export * from './models/shipment.model';
 export * from './models/shipment-ws.model';

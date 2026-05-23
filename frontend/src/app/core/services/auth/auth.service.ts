@@ -75,6 +75,8 @@ export class AuthService {
     }
   }
 
-
+  getToken():string | null{
+    return this.tokenService.get();
+  }
  
 }
