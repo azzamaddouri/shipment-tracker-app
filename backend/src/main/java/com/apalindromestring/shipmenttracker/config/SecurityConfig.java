@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/shipments/track/**").permitAll()
                         .requestMatchers("/api/v1/shipments/recent/public").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/v1/shipments/**").hasAnyRole("ADMIN", "CARRIER")
+                        .requestMatchers("/api/v1/shipments/**").hasAnyRole("OPERATOR", "CARRIER")
                         .anyRequest().authenticated())
                 // returns JSON response instead of HTML error page - good for the frontend
                 .exceptionHandling(ex -> ex
