@@ -17,3 +17,11 @@ export type CreateShipmentDto = Omit<Shipment,
 
 export type UpdateStatusDto = Omit<Shipment, 
 'id' |'trackingNumber' |'origin' | 'destination' |'createdAt'|'updatedAt'|'estimatedDelivery'>;
+
+
+export interface PublicShipmentActivity{
+    trackingNumber: string;
+    status:  ShipmentStatus;
+    destination:    string;
+    updatedAt:      string;
+}

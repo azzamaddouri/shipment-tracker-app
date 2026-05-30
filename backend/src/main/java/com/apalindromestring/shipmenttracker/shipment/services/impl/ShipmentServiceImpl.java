@@ -74,6 +74,11 @@ public class ShipmentServiceImpl implements ShipmentService {
         return savedShipment;
     }
 
+    @Override
+    public List<Shipment> getRecentPublicActivity() {
+        return shipmentRepository.findTop3ByOrderByUpdatedAtDesc();
+    }
+
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }

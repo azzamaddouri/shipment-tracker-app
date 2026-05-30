@@ -28,14 +28,14 @@ export class JwtHelper {
     static isExpired(token:string):boolean{
         const payload = JwtHelper.decode(token);
         if(!payload) return true;
-        return Date.now() >= payload.exp;
+        return Date.now() >= payload.exp * 1000;
     }
 
 
     static expiresInMs(token:string): number {
        const payload = JwtHelper.decode(token);
        if (!payload) return 0;
-       return Math.max(0, payload.exp - Date.now());
+       return Math.max(0, payload.exp * 1000 - Date.now());
     }
 
 }

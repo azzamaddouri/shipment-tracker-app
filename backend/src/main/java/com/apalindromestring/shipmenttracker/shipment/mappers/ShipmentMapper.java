@@ -4,8 +4,7 @@ import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRe
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.ShipmentDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring",
         unmappedSourcePolicy = ReportingPolicy.IGNORE,
@@ -18,4 +17,20 @@ public interface ShipmentMapper {
 
     UpdateStatusRequest toUpdateStatusRequest(ShipmentDto.UpdateStatusRequest dto);
 
+    @Mapping(target = "trackingNumber", source = "trackingNumber", qualifiedByName = "maskTrackingNumber")
+    @Mapping(target = "destination", source = "destination", qualifiedByName = "extractCity")
+    ShipmentDto.PublicShipmentActivityDto toPublicActivityDto(Shipment shipment);
+
+
+    @Named("maskTrackingNumber")
+    default String maskTrackingNumber(String trackingNumber) {
+        if (trackingNumber == null || trackingNumber.length() < 6) return "...";
+        return "..." + trackingNumber.substring(trackingNumber.length() - 6);
+    }
+
+    @Named("extractCity")
+    default String extractCity(String destination) {
+        if (destination == null || destination.isEmpty()) return "Unknown";
+        return destination.split(",")[0].trim();
+    }
 }

@@ -17,4 +17,6 @@ public interface ShipmentService {
     Shipment getShipmentByTrackingNumber(String trackingNumber);
 
     Shipment updateShipmentStatus(Long id, UpdateStatusRequest updateStatusRequest);
+
+    List<Shipment> getRecentPublicActivity();
 }

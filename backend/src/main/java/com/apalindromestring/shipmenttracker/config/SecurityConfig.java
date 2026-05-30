@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/shipments/track/**").permitAll()
+                        .requestMatchers("/api/v1/shipments/recent/public").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/v1/shipments/**").hasAnyRole("ADMIN", "CARRIER")
                         .anyRequest().authenticated())

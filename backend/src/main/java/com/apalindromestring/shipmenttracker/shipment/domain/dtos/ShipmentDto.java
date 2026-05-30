@@ -50,4 +50,16 @@ public class ShipmentDto {
         public ShipmentStatus status;
         public String currentLocation;
     }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PublicShipmentActivityDto {
+        String trackingNumber;
+        String status;
+        String destination;
+        String updatedAt;
+    }
 }

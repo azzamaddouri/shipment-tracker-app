@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { catchError, EMPTY, Observable, Subject, switchMap, tap } from 'rxjs';
-import { CreateShipmentDto, Shipment, ShipmentStatus, ShipmentWebSocketService, STATUS_LABELS, UpdateStatusDto } from '..';
+import { catchError, EMPTY, Observable, of, Subject, switchMap, tap } from 'rxjs';
+import { CreateShipmentDto, PublicShipmentActivity, Shipment, ShipmentStatus, ShipmentWebSocketService, STATUS_LABELS, UpdateStatusDto } from '..';
 import { environment } from '../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-const BASE_URL = environment.api.server;
+const BASE_URL = `${environment.api.server}/shipments`;
 const MAX_NOTIFICATIONS = 20;
 
 export interface ShipmentNotification {
@@ -126,6 +126,18 @@ export class ShipmentService {
       takeUntilDestroyed(this.destroyRef)
     )
 
+  }
+
+
+  getRecentPublicActivity(): Observable<PublicShipmentActivity[]> {
+    return this.http.get<PublicShipmentActivity[]>(`${BASE_URL}/recent/public`)
+    .pipe(
+      catchError((err) => {
+        console.error('Failed to load recent public activity', err);
+        return  of([]);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    );
   }
   
 

@@ -61,4 +61,13 @@ public class ShipmentController {
         ShipmentDto updatedShipmentDto = shipmentMapper.toDto(updatedShipment);
         return ResponseEntity.ok(updatedShipmentDto);
     }
+
+    @GetMapping("/recent/public")
+    public ResponseEntity<List<ShipmentDto.PublicShipmentActivityDto>> getRecentPublicActivity() {
+        List<Shipment> shipments =
+                shipmentService.getRecentPublicActivity();
+        List<ShipmentDto.PublicShipmentActivityDto> activity = shipments
+                .stream().map(shipmentMapper::toPublicActivityDto).toList();
+        return ResponseEntity.ok(activity);
+    }
 }
