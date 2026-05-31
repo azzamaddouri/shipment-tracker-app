@@ -62,4 +62,17 @@ public class ShipmentDto {
         String destination;
         String updatedAt;
     }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ShipmentHistoryDto {
+        String status;
+        String location;
+        String note;
+        String timestamp;
+    }
+
 }

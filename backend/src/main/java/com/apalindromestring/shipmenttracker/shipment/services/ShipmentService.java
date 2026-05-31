@@ -3,6 +3,7 @@ package com.apalindromestring.shipmenttracker.shipment.services;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
 
 import java.util.List;
 
@@ -19,4 +20,6 @@ public interface ShipmentService {
     Shipment updateShipmentStatus(Long id, UpdateStatusRequest updateStatusRequest);
 
     List<Shipment> getRecentPublicActivity();
+
+    List<ShipmentHistory> getShipmentHistory(String trackingNumber);
 }

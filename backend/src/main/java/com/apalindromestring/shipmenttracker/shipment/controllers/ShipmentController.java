@@ -3,6 +3,7 @@ package com.apalindromestring.shipmenttracker.shipment.controllers;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.ShipmentDto;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
 import com.apalindromestring.shipmenttracker.shipment.services.ShipmentService;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.mappers.ShipmentMapper;
@@ -69,5 +70,16 @@ public class ShipmentController {
         List<ShipmentDto.PublicShipmentActivityDto> activity = shipments
                 .stream().map(shipmentMapper::toPublicActivityDto).toList();
         return ResponseEntity.ok(activity);
+    }
+
+    @GetMapping("/track/{trackingNumber}/history")
+    public ResponseEntity<List<ShipmentHistory>> getShipmentHistory(
+            @PathVariable String trackingNumber) {
+        List<ShipmentHistory> shipmentHistory = shipmentService.getShipmentHistory(trackingNumber);
+        List<ShipmentDto.ShipmentHistoryDto> shipmentHistoryDto = shipmentHistory
+                .stream()
+                .map(shipmentMapper::toHistoryDto)
+                .toList();
+        return ResponseEntity.ok(shipmentHistory);
     }
 }

@@ -4,6 +4,7 @@ import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRe
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.ShipmentDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring",
@@ -20,6 +21,8 @@ public interface ShipmentMapper {
     @Mapping(target = "trackingNumber", source = "trackingNumber", qualifiedByName = "maskTrackingNumber")
     @Mapping(target = "destination", source = "destination", qualifiedByName = "extractCity")
     ShipmentDto.PublicShipmentActivityDto toPublicActivityDto(Shipment shipment);
+
+    ShipmentDto.ShipmentHistoryDto toHistoryDto(ShipmentHistory shipmentHistory);
 
 
     @Named("maskTrackingNumber")

@@ -32,6 +32,8 @@ public class ShipmentNotificationService {
 
             // Use case - Customer tracks their specific shipment
             messagingTemplate.convertAndSend("/topic/shipments/" + shipment.getId(), message);
+            messagingTemplate.convertAndSend("/topic/shipments/" + shipment.getTrackingNumber(), message);
+
 
             log.info("[WebSocket] Notified shipment update: id={}, status={}",
                     shipment.getId(), shipment.getStatus());

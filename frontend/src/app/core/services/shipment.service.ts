@@ -4,6 +4,7 @@ import { catchError, EMPTY, Observable, of, Subject, switchMap, tap } from 'rxjs
 import { CreateShipmentDto, PublicShipmentActivity, Shipment, ShipmentStatus, ShipmentWebSocketService, STATUS_LABELS, UpdateStatusDto } from '..';
 import { environment } from '../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TimelineEvent } from '../models/shipment-timeline.model';
 
 const BASE_URL = `${environment.api.server}/shipments`;
 const MAX_NOTIFICATIONS = 20;
@@ -22,6 +23,7 @@ export interface ShipmentState {
   selectedShipment : Shipment | null,
   trackedShipment: Shipment | null,
   notifications:     ShipmentNotification[];
+  timeline: TimelineEvent[];
   loading: boolean;
   error: string | null;
 }
@@ -30,6 +32,7 @@ export interface ShipmentState {
    selectedShipment: null,
    trackedShipment: null,
    notifications:[],
+   timeline: [],
    loading: false,
    error: null,
  }
@@ -49,6 +52,8 @@ export class ShipmentService {
   readonly shipments = computed(() => this._state().shipments);
   readonly selectedShipment = computed(() => this._state().selectedShipment);
   readonly trackedShipment = computed(() => this._state().trackedShipment);
+  readonly timeline = computed(() => this._state().timeline);
+
     readonly notifications    = computed(() => this._state().notifications);
 
   readonly loading = computed(() => this._state().loading);
@@ -58,10 +63,13 @@ export class ShipmentService {
   private readonly _loadAll$ = new Subject<void>();
   private readonly _loadById$ = new Subject<number>();
   private readonly _trackByNumber$ = new Subject<string>();
+  private readonly _loadTimeline$ = new Subject<string>();
 
   constructor(){
     this._setupLoadAll();
     this._setupWebSocketUpdates();
+    this._setupTrackByNumber();
+    this._setupLoadTimeline();
   }
 
   private _setupLoadAll(): void {
@@ -139,8 +147,56 @@ export class ShipmentService {
       takeUntilDestroyed(this.destroyRef)
     );
   }
-  
 
+
+  private _setupTrackByNumber(): void {
+    this._trackByNumber$
+    .pipe(
+      tap( () =>
+        this._patchState({ loading: true, error: null,
+          trackedShipment: null })),
+          switchMap((trackingNumber) =>
+            this.http.get<Shipment>(`${BASE_URL}/track/${trackingNumber}`).pipe(
+              catchError((err) => {
+                this._patchState({loading:false,error: err.message ?? `Failed to track shipment with tracking number ${trackingNumber}`});
+                return EMPTY;
+              })
+            )
+          ),
+      takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe((trackedShipment) => {
+          this._patchState({ trackedShipment, loading: false });
+        })
+   }
+
+   private _setupLoadTimeline(): void {
+    this._loadTimeline$
+    .pipe(
+      switchMap((trackingNumber) =>
+        this.http.get<TimelineEvent[]>(`${BASE_URL}/track/${trackingNumber}/history`).pipe(
+          catchError((err) => {
+            console.error('Failed to load shipment timeline', err);
+            return of([]);
+          })
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    )
+    .subscribe((timeline) => {
+      this._patchState({ timeline });
+    });
+
+   }
+
+   trackByNumber(trackingNumber: string): void {
+    this._trackByNumber$.next(trackingNumber);
+   }
+
+   loadTimeline(trackingNumber: string): void {
+    this._loadTimeline$.next(trackingNumber);
+   }
+   
    private _setupWebSocketUpdates(): void {
     this.webSocketService
       .getStatusUpdates()
@@ -166,7 +222,28 @@ export class ShipmentService {
                   updatedAt:       update.timestamp,
                 }
               : this._state().selectedShipment,
+
+              trackedShipment:
+              this._state().trackedShipment?.trackingNumber === update.trackingNumber
+              ? {
+                  ...this._state().trackedShipment!,
+                  status:          update.status,
+                  currentLocation: update.currentLocation,
+                  updatedAt:       update.timestamp,
+                }
+              : this._state().trackedShipment,
         });
+
+        // 4. Prepend to timeline so it updates live
+      const newEvent = {
+        status:    update.status,
+        location:  update.currentLocation,
+        timestamp: update.timestamp,
+        note:      undefined,
+      };
+      this._patchState({
+        timeline: [newEvent, ...this._state().timeline],
+      });
  
         // 3. Push notification (cap at MAX_NOTIFICATIONS)
         this._pushNotification({

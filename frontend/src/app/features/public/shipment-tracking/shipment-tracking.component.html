@@ -1,1 +1,510 @@
-<p>shipment-tracking works!</p>
+<div class="min-h-screen bg-slate-50 print:bg-white" style="font-family: 'Plus Jakarta Sans', sans-serif">
+    <header class="sticky top-0 z-50 bg-white border-b border-slate-200 print:hidden">
+        <div class="max-w-[1100px] mx-auto px-4 h-14 flex items-center justify-between">
+            <a routerLink="/" class="flex items-center gap-2 no-underline">
+                <div class="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="font-extrabold text-slate-900 tracking-wide text-[15px]"
+                        style="font-family: 'Syne', sans-serif">
+                        SHIPMENT TRACKER
+                    </span>
+                    <span class="text-[11px] italic text-slate-400 font-normal">
+                        Real-time shipment visibility for businesses and their customers
+                    </span>
+                </div>
+            </a>
+            <div class="flex items-center gap-2">
+                @if (liveUpdate()) {
+                <span
+                    class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
+                    Live update
+                </span>
+                }
+                <button (click)="print()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print receipt
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-[1100px] mx-auto px-4 py-8 print:py-4">
+        @if (loading() && !shipment()) {
+        <div class="space-y-4">
+            <div class="h-8 bg-slate-200 rounded-lg w-56 animate-pulse"></div>
+            <div class="h-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+            <div class="grid grid-cols-3 gap-4">
+                @for (i of [1,2,3]; track i) {
+                <div class="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
+                }
+            </div>
+        </div>
+        }
+
+        @if (error() && !shipment()) {
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+            <svg class="w-12 h-12 text-red-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 class="text-lg font-bold text-slate-900 mb-2" style="font-family:'Syne',sans-serif;">Shipment not found
+            </h2>
+            <p class="text-[14px] text-slate-500 mb-5">
+                No shipment found for <span class="font-mono font-bold text-slate-700">{{ currentTrackingNumber()
+                    }}</span>
+            </p>
+            <a routerLink="/" class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white
+                  rounded-lg text-[13px] font-semibold no-underline hover:bg-slate-800
+                  transition-colors">
+                ← Back to home
+            </a>
+        </div>
+        }
+
+        @if (shipment(); as s) {
+        <div class="space-y-5">
+
+            <!-- Tracking number + back -->
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <p class="text-[11px] font-bold tracking-[.14em] uppercase text-slate-400 mb-0.5">
+                        Tracking number
+                    </p>
+                    <h1 class="text-[22px] font-extrabold text-slate-900 font-mono m-0"
+                        style="font-family:'Syne',sans-serif;">
+                        {{ s.trackingNumber }}
+                    </h1>
+                </div>
+                <a routerLink="/" class="inline-flex items-center gap-1.5 text-[12px] font-semibold
+                    text-slate-500 no-underline hover:text-slate-700 transition-colors">
+                    ← Back to home
+                </a>
+            </div>
+
+
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden
+                    shadow-sm print:shadow-none">
+
+                <!-- Status accent -->
+                <div class="h-1 w-full" [class]="getStatusConfig(s.status).step"></div>
+
+                <div class="p-6">
+                    <!-- Status row -->
+                    <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+                        <div>
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
+                             text-[13px] font-bold ring-1 ring-inset" [class]="getStatusConfig(s.status).bg + ' ' +
+                               getStatusConfig(s.status).text + ' ' +
+                               getStatusConfig(s.status).ring">
+                                <span class="w-2 h-2 rounded-full animate-pulse"
+                                    [class]="getStatusConfig(s.status).dot"></span>
+                                {{ STATUS_LABELS[s.status] }}
+                            </span>
+                            <p class="text-[12px] text-slate-400 mt-1.5">
+                                Last updated: {{ s.updatedAt | date: 'MMM d, y · HH:mm' }}
+                            </p>
+                        </div>
+
+                        @if (s.estimatedDelivery) {
+                        <div class="text-right">
+                            <p class="text-[11px] font-bold tracking-[.1em] uppercase text-slate-400">
+                                Estimated Delivery
+                            </p>
+                            <p class="text-[18px] font-extrabold text-orange-500 mt-0.5"
+                                style="font-family:'Syne',sans-serif;">
+                                {{ s.estimatedDelivery | date: 'EEE, MMM d' }}
+                            </p>
+                        </div>
+                        }
+                    </div>
+
+                    @if (s.status !== SHIPMENT_STATUS.EXCEPTION) {
+                    <div class="relative mb-2">
+                        <!-- Background line -->
+                        <div class="absolute top-4 left-0 right-0 h-0.5 bg-slate-100 z-0"></div>
+                        <!-- Progress fill -->
+                        <div class="absolute top-4 left-0 h-0.5 bg-orange-500 z-0 transition-all duration-700"
+                            [style.width]="progressPercent() + '%'"></div>
+
+                        <div class="relative z-10 flex justify-between">
+                            @for (step of PROGRESS_STEPS; track step) {
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center
+                                  transition-all duration-300" [class.bg-orange-500]="isStepCompleted(step)"
+                                    [class.border-orange-500]="isStepCompleted(step)"
+                                    [class.bg-white]="!isStepCompleted(step)"
+                                    [class.border-slate-200]="!isStepCompleted(step)">
+                                    @if (isStepCompleted(step)) {
+                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    } @else {
+                                    <span class="w-2 h-2 rounded-full bg-slate-200"></span>
+                                    }
+                                </div>
+                                <span class="text-[9px] font-semibold text-center leading-tight max-w-[56px]"
+                                    [class.text-orange-600]="isStepCompleted(step)"
+                                    [class.text-slate-400]="!isStepCompleted(step)">
+                                    {{ STATUS_LABELS[step] }}
+                                </span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    } @else {
+                    <div class="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+                        <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p class="text-[13px] font-semibold text-red-700">
+                            Exception — this shipment requires attention. Please contact support.
+                        </p>
+                    </div>
+                    }
+
+                    @if (s.currentLocation) {
+                    <div class="flex items-center gap-2 mt-5 pt-5 border-t border-slate-100">
+                        <svg class="w-4 h-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <p class="text-[13px] text-slate-600">
+                            <span class="font-semibold text-slate-800">Current location:</span>
+                            {{ s.currentLocation }}
+                        </p>
+                    </div>
+                    }
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <!-- From -->
+                <div class="bg-white border border-slate-200 rounded-xl p-5">
+                    <p class="text-[10px] font-bold tracking-[.14em] uppercase text-slate-400 mb-3">Sender</p>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[14px] font-bold text-slate-900">{{ s.origin }}</p>
+                            <p class="text-[12px] text-slate-400 mt-0.5">Origin</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- To -->
+                <div class="bg-white border border-slate-200 rounded-xl p-5">
+                    <p class="text-[10px] font-bold tracking-[.14em] uppercase text-slate-400 mb-3">Recipient</p>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[14px] font-bold text-slate-900">{{ s.destination }}</p>
+                            <p class="text-[12px] text-slate-400 mt-0.5">Destination</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parcel info -->
+                <div class="bg-white border border-slate-200 rounded-xl p-5">
+                    <p class="text-[10px] font-bold tracking-[.14em] uppercase text-slate-400 mb-3">Parcel</p>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[12px] text-slate-500">Type</span>
+                            <span class="text-[12px] font-semibold text-slate-800">Standard Parcel</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[12px] text-slate-500">Weight</span>
+                            <span class="text-[12px] font-semibold text-slate-800">—</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[12px] text-slate-500">Duty fees</span>
+                            <span class="text-[12px] font-semibold text-slate-800">—</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[12px] text-slate-500">Delivery mode</span>
+                            <span class="text-[12px] font-semibold text-slate-800">Standard</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden print:hidden">
+
+                <!-- Tab bar -->
+                <div class="flex border-b border-slate-100">
+                    @for (tab of [
+                    { id: 'timeline', label: 'Timeline', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2
+                    0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+                    { id: 'details', label: 'Shipment info',icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0
+                    0118 0z' },
+                    { id: 'map', label: 'Map', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0
+                    13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' }
+                    ]; track tab.id) {
+                    <button (click)="setTab($any(tab.id))" class="flex items-center gap-2 px-5 py-4 text-[13px] font-semibold
+                             border-b-2 transition-all duration-150" [class.border-orange-500]="activeTab() === tab.id"
+                        [class.text-orange-600]="activeTab() === tab.id"
+                        [class.border-transparent]="activeTab() !== tab.id"
+                        [class.text-slate-400]="activeTab() !== tab.id"
+                        [class.hover:text-slate-600]="activeTab() !== tab.id">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                [attr.d]="tab.icon" />
+                        </svg>
+                        {{ tab.label }}
+                    </button>
+                    }
+                </div>
+
+
+                <!-- Tab: Timeline -->
+                @if (activeTab() === 'timeline') {
+                <div class="p-6">
+                    @if (timeline().length === 0) {
+                    <div class="text-center py-10">
+                        <svg class="w-10 h-10 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p class="text-[13px] text-slate-400">No history available yet.</p>
+                    </div>
+                    } @else {
+                    <ol class="relative border-l-2 border-slate-100 ml-4 space-y-6">
+                        @for (event of timeline(); track event.timestamp; let first = $first) {
+                        <li class="ml-6">
+                            <!-- Dot -->
+                            <span class="absolute -left-[9px] w-4 h-4 rounded-full
+                                   border-2 border-white flex items-center justify-center"
+                                [class]="getStatusConfig(event.status).step">
+                            </span>
+
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <p class="text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                                        {{ STATUS_LABELS[event.status] }}
+                                        @if (first) {
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                                           bg-orange-50 text-orange-600 border border-orange-200">
+                                            Latest
+                                        </span>
+                                        }
+                                    </p>
+                                    @if (event.location) {
+                                    <p class="text-[12px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                        <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        {{ event.location }}
+                                    </p>
+                                    }
+                                    @if (event.note) {
+                                    <p class="text-[12px] text-slate-400 italic mt-1">{{ event.note }}</p>
+                                    }
+                                </div>
+                                <time class="text-[11px] text-slate-400 shrink-0 font-medium">
+                                    {{ event.timestamp | date: 'MMM d · HH:mm' }}
+                                </time>
+                            </div>
+                        </li>
+                        }
+                    </ol>
+                    }
+                </div>
+                }
+
+
+                <!-- Tab: Shipment info -->
+                @if (activeTab() === 'details') {
+                <div class="p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                        <!-- Shipment details -->
+                        <div>
+                            <p class="text-[11px] font-bold tracking-[.12em] uppercase text-slate-400 mb-4">
+                                Shipment details
+                            </p>
+                            <div class="space-y-3">
+                                @for (row of [
+                                ['Tracking number', s.trackingNumber],
+                                ['Status', STATUS_LABELS[s.status]],
+                                ['Origin', s.origin],
+                                ['Destination', s.destination],
+                                ['Current location', s.currentLocation || '—'],
+                                ['Last updated', s.updatedAt | date: 'MMM d, y · HH:mm'],
+                                ['Estimated delivery', s.estimatedDelivery ? (s.estimatedDelivery | date: 'EEE, MMM d,
+                                y') : '—']
+                                ]; track row[0]) {
+                                <div class="flex justify-between items-start py-2.5
+                                  border-b border-slate-50 last:border-0">
+                                    <span class="text-[12px] text-slate-500 font-medium">{{ row[0] }}</span>
+                                    <span class="text-[12px] font-semibold text-slate-800 text-right max-w-[200px]">
+                                        {{ row[1] }}
+                                    </span>
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Parcel & fees -->
+                        <div>
+                            <p class="text-[11px] font-bold tracking-[.12em] uppercase text-slate-400 mb-4">
+                                Parcel & fees
+                            </p>
+                            <div class="space-y-3">
+                                @for (row of [
+                                ['Package type', 'Standard Parcel'],
+                                ['Weight', '—'],
+                                ['Dimensions', '—'],
+                                ['Declared value', '—'],
+                                ['Duty fees', '—'],
+                                ['Delivery mode', 'Standard'],
+                                ['Picked up', s.updatedAt | date: 'MMM d, y']
+                                ]; track row[0]) {
+                                <div class="flex justify-between items-start py-2.5
+                                  border-b border-slate-50 last:border-0">
+                                    <span class="text-[12px] text-slate-500 font-medium">{{ row[0] }}</span>
+                                    <span class="text-[12px] font-semibold text-slate-800">{{ row[1] }}</span>
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                }
+
+                <!-- Tab: Map -->
+                @if (activeTab() === 'map') {
+                <div class="p-6">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl
+                          flex flex-col items-center justify-center
+                          h-[340px] text-center">
+                        <svg class="w-12 h-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <p class="text-[14px] font-semibold text-slate-500 mb-1">Interactive map</p>
+                        <p class="text-[12px] text-slate-400 max-w-[280px]">
+                            Leaflet.js integration pending. Will show origin, current location,
+                            and destination once wired to the map tile service.
+                        </p>
+                    </div>
+                </div>
+                }
+
+            </div>
+
+
+            @if (!isDelivered()) {
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 print:hidden">
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+
+                    <!-- Email subscribe -->
+                    <div class="flex-1">
+                        <p class="text-[13px] font-bold text-slate-900 mb-1">Get email updates</p>
+                        <p class="text-[12px] text-slate-400 mb-3">
+                            We'll notify you when status changes, out for delivery, and delivered.
+                        </p>
+
+                        @if (emailSuccess()) {
+                        <div class="flex items-center gap-2 text-[12px] text-green-700
+                               bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+                            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Subscribed! You'll receive updates at the address provided.
+                        </div>
+                        } @else {
+                        <form [formGroup]="emailForm" (ngSubmit)="subscribeEmail()" class="flex gap-2">
+                            <input formControlName="email" type="email" placeholder="your@email.com" class="flex-1 h-10 px-3.5 bg-slate-50 border rounded-lg
+                                  text-[13px] text-slate-900 outline-none
+                                  placeholder:text-slate-400
+                                  focus:border-orange-500 focus:bg-white
+                                  focus:shadow-[0_0_0_3px_rgba(249,115,22,.08)]
+                                  transition-all duration-150" [class.border-red-400]="hasEmailError()"
+                                [class.border-slate-200]="!hasEmailError()" />
+                            <button type="submit" [disabled]="emailLoading()" class="h-10 px-4 bg-orange-500 text-white border-none rounded-lg
+                                   text-[12px] font-bold cursor-pointer whitespace-nowrap
+                                   hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed
+                                   transition-colors duration-150">
+                                @if (emailLoading()) { Subscribing… } @else { Notify me }
+                            </button>
+                        </form>
+                        }
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="hidden sm:block w-px bg-slate-100 self-stretch"></div>
+
+                    <!-- Print receipt -->
+                    <div class="sm:w-48">
+                        <p class="text-[13px] font-bold text-slate-900 mb-1">Receipt</p>
+                        <p class="text-[12px] text-slate-400 mb-3">
+                            Download or print a tracking receipt for your records.
+                        </p>
+                        <button (click)="print()" class="w-full h-10 flex items-center justify-center gap-2
+                               border border-slate-200 rounded-lg text-[12px]
+                               font-semibold text-slate-600 bg-white
+                               hover:bg-slate-50 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Print receipt
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            }
+
+            @if (isDelivered()) {
+            <div class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center print:block">
+                <svg class="w-12 h-12 text-green-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-[18px] font-extrabold text-green-800 mb-1" style="font-family:'Syne',sans-serif;">
+                    Delivered successfully
+                </h2>
+                <p class="text-[13px] text-green-700">
+                    Your shipment was delivered on {{ s.updatedAt | date: 'EEEE, MMMM d, y' }}.
+                </p>
+            </div>
+            }
+
+
+        </div>
+        }
+    </div>
+</div>
