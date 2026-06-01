@@ -174,6 +174,18 @@ appendRoutePoint(point: RoutePoint): void {
     );
   }
 
+  subscribeToEmailUpdates(trackingNumber: string, email: string): Observable<void> {
+  return this.http
+    .post<void>(`${BASE_URL}/track/${trackingNumber}/subscribe`, { email })
+    .pipe(
+      catchError((err) => {
+        this._patchState({ error: err.message ?? 'Failed to subscribe' });
+        return EMPTY;
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    );
+}
+
 
   private _setupTrackByNumber(): void {
     this._trackByNumber$

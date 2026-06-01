@@ -1,5 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.services;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.EmailSubscriptionRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.PushLocationRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.RoutePointDto;
@@ -28,4 +29,8 @@ public interface ShipmentService {
     List<RoutePointDto> getShipmentRoute(String trackingNumber);
 
     void pushCarrierLocation(String trackingNumber, PushLocationRequest request);
+
+    void subscribeToEmailUpdates(String trackingNumber, EmailSubscriptionRequest request);
+
+
 }

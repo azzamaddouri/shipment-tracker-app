@@ -1,4 +1,4 @@
-package com.apalindromestring.shipmenttracker.shipment.domain;
+package com.apalindromestring.shipmenttracker.shipment.domain.dtos;
 
 
 import jakarta.validation.constraints.Email;

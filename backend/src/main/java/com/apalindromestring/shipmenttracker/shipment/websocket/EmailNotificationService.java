@@ -1,8 +1,16 @@
-package com.apalindromestring.shipmenttracker.shipment.services;
+package com.apalindromestring.shipmenttracker.shipment.websocket;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentEmailSubscription;
+import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentEmailSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor

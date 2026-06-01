@@ -177,13 +177,13 @@
     @for (step of PROGRESS_STEPS; track step; let last = $last) {
  
       <!-- Label centred under its circle (w-8 = circle width) -->
-      <div class="flex-none w-8 flex justify-center">
-        <span class="text-[9px] font-semibold text-center leading-tight w-14 -translate-x-3"
-              [class.text-orange-600]="isStepCompleted(step)"
-              [class.text-slate-400]="!isStepCompleted(step)">
-          {{ STATUS_LABELS[step] }}
-        </span>
-      </div>
+      <div class="flex-none w-8 flex justify-center overflow-visible">
+      <span class="text-[9px] font-semibold text-center leading-tight whitespace-nowrap"
+            [class.text-orange-600]="isStepCompleted(step)"
+            [class.text-slate-400]="!isStepCompleted(step)">
+        {{ STATUS_LABELS[step] }}
+      </span>
+    </div>
  
       <!-- Spacer that matches the connector flex-1 -->
       @if (!last) {

@@ -1,9 +1,8 @@
 package com.apalindromestring.shipmenttracker.shipment.listeners;
 
-import com.apalindromestring.shipmenttracker.shipment.domain.entities.CarrierLocation;
-import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.CarrierLocationEvent;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.ShipmentStatusEvent;
+import com.apalindromestring.shipmenttracker.shipment.websocket.EmailNotificationService;
 import com.apalindromestring.shipmenttracker.shipment.websocket.ShipmentNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +17,16 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class ShipmentEventListener {
 
     private final ShipmentNotificationService notificationService;
+    private final EmailNotificationService emailNotificationService; // ← inject
+
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onShipmentStatusChanged(ShipmentStatusEvent event) {
         log.info("[Event] Shipment event received for id={}", event.shipment().getId());
         notificationService.notifyShipmentUpdate(event.shipment());
+        emailNotificationService.notifySubscribers(event.shipment()); // ← add this
+
     }
 
     @Async

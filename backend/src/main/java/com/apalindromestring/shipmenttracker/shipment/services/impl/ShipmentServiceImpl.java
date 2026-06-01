@@ -1,16 +1,19 @@
 package com.apalindromestring.shipmenttracker.shipment.services.impl;
 
 import com.apalindromestring.shipmenttracker.exception.domain.ResourceNotFoundException;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.EmailSubscriptionRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.PushLocationRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.RoutePointDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.CarrierLocation;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentEmailSubscription;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.CarrierLocationEvent;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.ShipmentStatusEvent;
 import com.apalindromestring.shipmenttracker.shipment.repositories.CarrierLocationRepository;
+import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentEmailSubscriptionRepository;
 import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentHistoryRepository;
 import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentRepository;
 import com.apalindromestring.shipmenttracker.shipment.services.ShipmentService;
@@ -33,6 +36,7 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final ApplicationEventPublisher eventPublisher;
     private final ShipmentHistoryRepository shipmentHistoryRepository;
     private final CarrierLocationRepository carrierLocationRepository;
+    private final ShipmentEmailSubscriptionRepository shipmentEmailSubscriptionRepository;
 
 
     @Override
@@ -145,6 +149,29 @@ public class ShipmentServiceImpl implements ShipmentService {
         eventPublisher.publishEvent(new CarrierLocationEvent(shipment, savedLocation));
 
 
+    }
+
+    @Override
+    public void subscribeToEmailUpdates(
+            String trackingNumber,
+            EmailSubscriptionRequest request) {
+        Shipment shipment = shipmentRepository
+                .findShipmentByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Shipment", "trackingNumber", trackingNumber));
+
+        boolean alreadySubscribed = shipmentEmailSubscriptionRepository
+                .existsByShipmentAndEmail(shipment, request.getEmail());
+
+        if (!alreadySubscribed) {
+            ShipmentEmailSubscription subscription = ShipmentEmailSubscription.builder()
+                    .shipment(shipment)
+                    .email(request.getEmail())
+                    .subscribedAt(LocalDateTime.now())
+                    .build();
+            shipmentEmailSubscriptionRepository.save(subscription);
+            log.info("[Email] {} subscribed to updates for {}", request.getEmail(), trackingNumber);
+        }
     }
 
 

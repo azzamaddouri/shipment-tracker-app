@@ -1,5 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.controllers;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.EmailSubscriptionRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.*;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
@@ -96,6 +97,15 @@ public class ShipmentController {
             @PathVariable String trackingNumber,
             @Valid @RequestBody PushLocationRequest request) {
         shipmentService.pushCarrierLocation(trackingNumber, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/track/{trackingNumber}/subscribe")
+    public ResponseEntity<Void> subscribeToEmailUpdates(
+            @PathVariable String trackingNumber,
+            @Valid @RequestBody EmailSubscriptionRequest request
+    ) {
+        shipmentService.subscribeToEmailUpdates(trackingNumber, request);
         return ResponseEntity.ok().build();
     }
 

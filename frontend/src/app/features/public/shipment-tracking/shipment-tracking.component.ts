@@ -181,19 +181,31 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
     }
   }
 
-  subscribeEmail():void{
-    if(this.emailForm.invalid || !this.shipment()) {
-      this.emailForm.markAllAsTouched();
-      return;
-    }
-    this.emailLoading.set(true);
-
-    setTimeout(() => {
-      this.emailSuccess.set(true);
-      this.emailLoading.set(false);
-    },800 );
+  subscribeEmail(): void {
+  if (this.emailForm.invalid || !this.shipment()) {
+    this.emailForm.markAllAsTouched();
+    return;
   }
 
+  this.emailLoading.set(true);
+
+  const trackingNumber = this.currentTrackingNumber();
+  const { email } = this.emailForm.getRawValue();
+
+  this.shipmentService
+    .subscribeToEmailUpdates(trackingNumber, email)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: () => {
+        this.emailSuccess.set(true);
+        this.emailLoading.set(false);
+        this.emailForm.reset();
+      },
+      error: () => {
+        this.emailLoading.set(false);
+      },
+    });
+}
   hasEmailError(): boolean {
     const control = this.emailForm.get('email');
     return !!(control?.invalid && control?.touched);
