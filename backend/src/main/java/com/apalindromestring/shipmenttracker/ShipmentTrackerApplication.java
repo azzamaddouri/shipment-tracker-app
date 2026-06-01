@@ -29,7 +29,7 @@ public class ShipmentTrackerApplication implements CommandLineRunner {
                     .name("Test User")
                     .email(email)
                     .password(passwordEncoder.encode("testultimate"))
-                    .role(Role.OPERATOR)
+                    .role(Role.CARRIER)
                     .active(true)
                     .build();
             return userRepository.save(newUser);

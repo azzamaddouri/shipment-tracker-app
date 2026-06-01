@@ -1,6 +1,8 @@
 package com.apalindromestring.shipmenttracker.shipment.services;
 
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.PushLocationRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.RoutePointDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
@@ -22,4 +24,8 @@ public interface ShipmentService {
     List<Shipment> getRecentPublicActivity();
 
     List<ShipmentHistory> getShipmentHistory(String trackingNumber);
+
+    List<RoutePointDto> getShipmentRoute(String trackingNumber);
+
+    void pushCarrierLocation(String trackingNumber, PushLocationRequest request);
 }

@@ -2,10 +2,15 @@ package com.apalindromestring.shipmenttracker.shipment.services.impl;
 
 import com.apalindromestring.shipmenttracker.exception.domain.ResourceNotFoundException;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.PushLocationRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.RoutePointDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.CarrierLocation;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
+import com.apalindromestring.shipmenttracker.shipment.domain.events.CarrierLocationEvent;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.ShipmentStatusEvent;
+import com.apalindromestring.shipmenttracker.shipment.repositories.CarrierLocationRepository;
 import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentHistoryRepository;
 import com.apalindromestring.shipmenttracker.shipment.repositories.ShipmentRepository;
 import com.apalindromestring.shipmenttracker.shipment.services.ShipmentService;
@@ -27,6 +32,7 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final ShipmentHistoryRepository shipmentHistoryRepository;
+    private final CarrierLocationRepository carrierLocationRepository;
 
 
     @Override
@@ -99,6 +105,48 @@ public class ShipmentServiceImpl implements ShipmentService {
         return shipmentHistoryRepository
                 .findByShipment_TrackingNumberOrderByTimestampDesc(trackingNumber);
     }
+
+    @Override
+    public List<RoutePointDto> getShipmentRoute(String trackingNumber) {
+        shipmentRepository.findShipmentByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Shipment", "trackingNumber", trackingNumber));
+
+        return carrierLocationRepository
+                .findByShipment_TrackingNumberOrderByRecordedAtAsc(trackingNumber)
+                .stream()
+                .map(loc -> RoutePointDto.builder()
+                        .latitude(loc.getLatitude())
+                        .longitude(loc.getLongitude())
+                        .label(loc.getLabel())
+                        .recordedAt(loc.getRecordedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void pushCarrierLocation(String trackingNumber, PushLocationRequest request) {
+        Shipment shipment = shipmentRepository
+                .findShipmentByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Shipment", "trackingNumber", trackingNumber));
+
+        CarrierLocation location = CarrierLocation.builder()
+                .shipment(shipment)
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .label(request.getLabel())
+                .recordedAt(LocalDateTime.now())
+                .build();
+
+        CarrierLocation savedLocation = carrierLocationRepository.save(location);
+
+        eventPublisher.publishEvent(new CarrierLocationEvent(shipment, savedLocation));
+
+
+    }
+
 
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();

@@ -1,5 +1,8 @@
 package com.apalindromestring.shipmenttracker.shipment.listeners;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.CarrierLocation;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
+import com.apalindromestring.shipmenttracker.shipment.domain.events.CarrierLocationEvent;
 import com.apalindromestring.shipmenttracker.shipment.domain.events.ShipmentStatusEvent;
 import com.apalindromestring.shipmenttracker.shipment.websocket.ShipmentNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +19,18 @@ public class ShipmentEventListener {
 
     private final ShipmentNotificationService notificationService;
 
-
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onShipmentStatusChanged(ShipmentStatusEvent event) {
         log.info("[Event] Shipment event received for id={}", event.shipment().getId());
         notificationService.notifyShipmentUpdate(event.shipment());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onLocationChanged(CarrierLocationEvent event) {
+        log.info("[Event] Location event received for tracking={}",
+                event.shipment().getTrackingNumber());
+        notificationService.notifyLocationUpdate(event.shipment(), event.location());
     }
 }

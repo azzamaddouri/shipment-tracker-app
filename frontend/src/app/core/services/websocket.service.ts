@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { StatusUpdateMessage, WebSocketService } from '..';
+import { LocationUpdateMessage } from '../models/route-point.model';
 
 const TOPICS = {
   STATUS_UPDATES: '/topic/shipments',
@@ -24,6 +25,12 @@ export class ShipmentWebSocketService {
       .watch<StatusUpdateMessage>(TOPICS.SHIPMENT_TRACK(trackingNumber))
       .pipe(map((message) => message.payload));
   }
+
+  trackShipmentLocation(trackingNumber: string): Observable<LocationUpdateMessage> {
+  return this.ws
+    .watch<LocationUpdateMessage>(`/topic/shipment/${trackingNumber}/location`)
+    .pipe(map(m => m.payload));
+}
 }
 
 

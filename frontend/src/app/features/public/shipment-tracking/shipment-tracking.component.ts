@@ -1,9 +1,18 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, DestroyRef, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { SHIPMENT_STATUS, ShipmentService, ShipmentStatus, ShipmentWebSocketService, STATUS_LABELS, WebSocketService } from '../../../core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import * as L from 'leaflet';
+import { RoutePoint, LocationUpdateMessage } from '../../../core/models/route-point.model';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 @Component({
   selector: 'app-shipment-tracking',
@@ -11,8 +20,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './shipment-tracking.component.html',
   styleUrl: './shipment-tracking.component.css',
 })
-export class ShipmentTrackingComponent implements OnInit {
+export class ShipmentTrackingComponent implements OnInit, AfterViewInit, OnDestroy  {
   
+  @ViewChild('mapContainer') mapContainer!: ElementRef<HTMLDivElement>;
+
+  private map:          L.Map | null         = null;
+  private polyline:     L.Polyline | null    = null;
+  private liveMarker:   L.Marker | null      = null;
+  private originMarker: L.Marker | null      = null;
+  private destMarker:   L.Marker | null      = null;
 
 readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
   readonly liveUpdate = signal<boolean>(false);
@@ -24,8 +40,9 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
   readonly error = this.shipmentService.error;
   readonly shipment = this.shipmentService.trackedShipment;
   readonly timeline = this.shipmentService.timeline;
+    readonly route = this.shipmentService.route;
 
-  private readonly route = inject(ActivatedRoute);
+  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -35,7 +52,7 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
   });
 
   readonly currentTrackingNumber = computed(()=>
-    this.route.snapshot.paramMap.get('trackingNumber') ?? '');
+    this.activatedRoute.snapshot.paramMap.get('trackingNumber') ?? '');
 
   readonly isDelivered = computed(()=>
     this.shipment()?.status === SHIPMENT_STATUS.DELIVERED);
@@ -58,12 +75,15 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
 
 
   readonly progressPercent = computed(() => {
-    const order = Object.values(SHIPMENT_STATUS);
-    const status = this.shipment()?.status;
-    if(!status) return 0;
-    const idx = order.indexOf(status);
-    return Math.round(((idx + 1) / order.length) * 100);
-  });
+  const status = this.shipment()?.status;
+  if (!status || status === SHIPMENT_STATUS.EXCEPTION) return 0;
+
+  const idx = this.PROGRESS_STEPS.indexOf(status);
+  if (idx === -1) return 0;
+
+  const total = this.PROGRESS_STEPS.length - 1; // gaps between steps = 5
+  return idx === 0 ? 0 : Math.round((idx / total) * 100);
+});
 
   readonly PROGRESS_STEPS: ShipmentStatus[] = [
     SHIPMENT_STATUS.ORDER_PLACED,
@@ -86,17 +106,55 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
     return this.shipment()?.status === step;
   }
 
+   private readonly ORIGIN_ICON = L.divIcon({
+    className: '',
+    html: `<div style="width:32px;height:32px;background:#0f172a;border-radius:50%;
+                       border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);
+                       display:flex;align-items:center;justify-content:center;">
+             <div style="width:10px;height:10px;background:white;border-radius:50%"></div>
+           </div>`,
+    iconSize:   [32, 32],
+    iconAnchor: [16, 16],
+  });
+
+  private readonly DEST_ICON = L.divIcon({
+    className: '',
+    html: `<div style="width:32px;height:32px;background:#f97316;border-radius:50%;
+                       border:3px solid white;box-shadow:0 2px 8px rgba(249,115,22,.4);
+                       display:flex;align-items:center;justify-content:center;">
+             <div style="width:10px;height:10px;background:white;border-radius:50%"></div>
+           </div>`,
+    iconSize:   [32, 32],
+    iconAnchor: [16, 16],
+  });
+
+  private readonly LIVE_ICON = L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:20px;height:20px;">
+             <div style="position:absolute;inset:0;background:rgba(249,115,22,.25);
+                         border-radius:50%;animation:ping 1.2s ease-out infinite;"></div>
+             <div style="position:absolute;inset:3px;background:#f97316;border-radius:50%;
+                         border:2px solid white;box-shadow:0 2px 6px rgba(249,115,22,.5);"></div>
+           </div>`,
+    iconSize:   [20, 20],
+    iconAnchor: [10, 10],
+  });
+
   print() {
    window.print();
   }
 
   ngOnInit() : void {
-    const tracking = this.route.snapshot.paramMap.get('trackingNumber');
+    const tracking = this.activatedRoute.snapshot.paramMap.get('trackingNumber');
     if (!tracking) { this.router.navigate(['/']); return; }
 
     this.shipmentService.trackByNumber(tracking);
     this.shipmentService.loadTimeline(tracking);
+        this.shipmentService.loadRoute(tracking);   // ← load route on init
+
     this._subscribeToLiveUpdates(tracking);
+        this._subscribeToLiveLocation(tracking);    // ← subscribe to GPS stream
+
   }
 
   private _subscribeToLiveUpdates(trackingNumber: string): void {
@@ -115,8 +173,12 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
     this.STATUS_CONFIG[SHIPMENT_STATUS.ORDER_PLACED];
   }
 
-  setTab(tab: 'timeline' | 'details' | 'map') : void{
+  setTab(tab: 'timeline' | 'details' | 'map'): void {
     this.activeTab.set(tab);
+    if (tab === 'map') {
+      // Wait one tick for the DOM element to render
+      setTimeout(() => this._initMap(), 50);
+    }
   }
 
   subscribeEmail():void{
@@ -136,5 +198,118 @@ readonly activeTab     = signal<'timeline'|'details'|'map'>('timeline');
     const control = this.emailForm.get('email');
     return !!(control?.invalid && control?.touched);
   }
+
+  ngAfterViewInit(): void {
+    // Delay slightly so @if(activeTab()==='map') has rendered the container
+    if (this.activeTab() === 'map') this._initMap();
+  }
+ private _initMap(): void {
+    if (this.map || !this.mapContainer?.nativeElement) return;
+
+    this.map = L.map(this.mapContainer.nativeElement, {
+      center:    [48.8566, 2.3522],   // Paris as default
+      zoom:      5,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(this.map);
+
+    // Draw what we already have
+    this._drawRoute(this.route());
+    this._addOriginDestinationPins();
+  }
+
+  private _addOriginDestinationPins(): void {
+    if (!this.map || !this.shipment()) return;
+    const s = this.shipment()!;
+    const pts = this.route();
+
+    // Origin — first route point if available
+    if (pts.length > 0) {
+      const first = pts[0];
+      this.originMarker = L.marker([first.latitude, first.longitude], { icon: this.ORIGIN_ICON })
+        .bindPopup(`<b>Origin</b><br>${s.origin}`)
+        .addTo(this.map);
+    }
+
+    // Last known point = live carrier position
+    if (pts.length > 0) {
+      const last = pts[pts.length - 1];
+      this.liveMarker = L.marker([last.latitude, last.longitude], { icon: this.LIVE_ICON })
+        .bindPopup(`<b>Current location</b><br>${last.label ?? s.currentLocation ?? ''}`)
+        .addTo(this.map);
+    }
+  }
+
+  private _drawRoute(points: RoutePoint[]): void {
+    if (!this.map || points.length === 0) return;
+
+    const latlngs = points.map(p => [p.latitude, p.longitude] as L.LatLngTuple);
+
+    if (this.polyline) {
+      this.polyline.setLatLngs(latlngs);
+    } else {
+      this.polyline = L.polyline(latlngs, {
+        color:     '#f97316',
+        weight:    3,
+        opacity:   0.8,
+        dashArray: '6 4',
+      }).addTo(this.map);
+    }
+
+    // Fit map to route
+    this.map.fitBounds(this.polyline.getBounds(), { padding: [40, 40] });
+  }
+
+  // ── Live GPS subscription ──────────────────────────────────────────────
+
+  private _subscribeToLiveLocation(trackingNumber: string): void {
+  this.wsService
+    .trackShipmentLocation(trackingNumber)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe((loc: LocationUpdateMessage) => {
+      const point: RoutePoint = {
+        latitude:   loc.latitude,
+        longitude:  loc.longitude,
+        label:      loc.label,
+        recordedAt: loc.recordedAt,
+      };
+
+      // 1. append first
+      this.shipmentService.appendRoutePoint(point);
+
+      // 2. update map using the UPDATED route signal
+      if (this.map) {
+        this._updateLiveMarker(point);
+        this._drawRoute(this.route()); // ← reads signal AFTER append ✅
+      } else if (this.activeTab() === 'map') {
+        // map tab is active but map not initialized yet
+        setTimeout(() => this._initMap(), 50);
+      }
+    });
+}
+
+  private _updateLiveMarker(point: RoutePoint): void {
+    if (!this.map) return;
+    const latlng: L.LatLngTuple = [point.latitude, point.longitude];
+
+    if (this.liveMarker) {
+      this.liveMarker.setLatLng(latlng);
+      this.liveMarker
+        .getPopup()
+        ?.setContent(`<b>Current location</b><br>${point.label ?? ''}`);
+    } else {
+      this.liveMarker = L.marker(latlng, { icon: this.LIVE_ICON })
+        .bindPopup(`<b>Current location</b><br>${point.label ?? ''}`)
+        .addTo(this.map);
+    }
+  }
+  ngOnDestroy(): void {
+    this.map?.remove();
+  }
+
 
 }

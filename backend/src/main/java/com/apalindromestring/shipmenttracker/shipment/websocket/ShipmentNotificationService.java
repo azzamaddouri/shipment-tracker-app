@@ -1,6 +1,8 @@
 package com.apalindromestring.shipmenttracker.shipment.websocket;
 
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.LocationUpdateMessage;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.StatusUpdateMessage;
+import com.apalindromestring.shipmenttracker.shipment.domain.entities.CarrierLocation;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
 import com.apalindromestring.shipmenttracker.shipment.domain.enums.ShipmentStatus;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,26 @@ public class ShipmentNotificationService {
         }
     }
 
+    public void notifyLocationUpdate(Shipment shipment, CarrierLocation location) {
+        try {
+            LocationUpdateMessage message = LocationUpdateMessage.builder()
+                    .trackingNumber(shipment.getTrackingNumber())
+                    .latitude(location.getLatitude())
+                    .longitude(location.getLongitude())
+                    .label(location.getLabel())
+                    .recordedAt(location.getRecordedAt())
+                    .build();
+
+            messagingTemplate.convertAndSend(
+                    "/topic/shipment/" + shipment.getTrackingNumber() + "/location",
+                    message
+            );
+
+            log.info("[WebSocket] Location update sent for tracking={}", shipment.getTrackingNumber());
+        } catch (Exception e) {
+            log.error("[WebSocket] Failed to send location update: {}", e.getMessage());
+        }
+    }
 
     private String getStatusMessage(ShipmentStatus status) {
         return switch (status) {

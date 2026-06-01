@@ -5,6 +5,7 @@ import { CreateShipmentDto, PublicShipmentActivity, Shipment, ShipmentStatus, Sh
 import { environment } from '../../../environments/environment';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TimelineEvent } from '../models/shipment-timeline.model';
+import { RoutePoint } from '../models/route-point.model';
 
 const BASE_URL = `${environment.api.server}/shipments`;
 const MAX_NOTIFICATIONS = 20;
@@ -24,6 +25,7 @@ export interface ShipmentState {
   trackedShipment: Shipment | null,
   notifications:     ShipmentNotification[];
   timeline: TimelineEvent[];
+  route: RoutePoint[];
   loading: boolean;
   error: string | null;
 }
@@ -33,6 +35,7 @@ export interface ShipmentState {
    trackedShipment: null,
    notifications:[],
    timeline: [],
+   route: [],
    loading: false,
    error: null,
  }
@@ -53,8 +56,8 @@ export class ShipmentService {
   readonly selectedShipment = computed(() => this._state().selectedShipment);
   readonly trackedShipment = computed(() => this._state().trackedShipment);
   readonly timeline = computed(() => this._state().timeline);
-
-    readonly notifications    = computed(() => this._state().notifications);
+  readonly route = computed(() => this._state().route);
+  readonly notifications    = computed(() => this._state().notifications);
 
   readonly loading = computed(() => this._state().loading);
   readonly error = computed(() => this._state().error);
@@ -64,12 +67,16 @@ export class ShipmentService {
   private readonly _loadById$ = new Subject<number>();
   private readonly _trackByNumber$ = new Subject<string>();
   private readonly _loadTimeline$ = new Subject<string>();
+  private readonly _loadRoute$ = new Subject<string>();
+
 
   constructor(){
     this._setupLoadAll();
     this._setupWebSocketUpdates();
     this._setupTrackByNumber();
     this._setupLoadTimeline();
+    this._setupLoadRoute();
+
   }
 
   private _setupLoadAll(): void {
@@ -94,7 +101,26 @@ export class ShipmentService {
   loadAll(): void {
     this._loadAll$.next();
   }
-
+  private _setupLoadRoute(): void {
+  this._loadRoute$
+    .pipe(
+      switchMap((trackingNumber) =>
+        this.http.get<RoutePoint[]>(
+          `${BASE_URL}/track/${trackingNumber}/route`
+        ).pipe(catchError(() => of([])))
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    )
+    .subscribe((route) => this._patchState({ route }));
+}
+loadRoute(trackingNumber: string): void {
+  this._loadRoute$.next(trackingNumber);
+}
+appendRoutePoint(point: RoutePoint): void {
+  this._patchState({
+    route: [...this._state().route, point],
+  });
+}
 
   createShipment(dto: CreateShipmentDto) : Observable<Shipment>{
     this._patchState({ loading: true, error: null });

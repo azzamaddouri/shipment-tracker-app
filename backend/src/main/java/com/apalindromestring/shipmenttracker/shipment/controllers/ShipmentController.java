@@ -1,16 +1,15 @@
 package com.apalindromestring.shipmenttracker.shipment.controllers;
 
-import com.apalindromestring.shipmenttracker.shipment.domain.dtos.UpdateStatusRequest;
+import com.apalindromestring.shipmenttracker.shipment.domain.dtos.*;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
-import com.apalindromestring.shipmenttracker.shipment.domain.dtos.ShipmentDto;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.ShipmentHistory;
 import com.apalindromestring.shipmenttracker.shipment.services.ShipmentService;
-import com.apalindromestring.shipmenttracker.shipment.domain.dtos.CreateShipmentRequest;
 import com.apalindromestring.shipmenttracker.shipment.mappers.ShipmentMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -82,4 +81,22 @@ public class ShipmentController {
                 .toList();
         return ResponseEntity.ok(shipmentHistory);
     }
+
+    // GET route — called on page load
+    @GetMapping("/track/{trackingNumber}/route")
+    public ResponseEntity<List<RoutePointDto>> getShipmentRoute(
+            @PathVariable String trackingNumber) {
+        return ResponseEntity.ok(shipmentService.getShipmentRoute(trackingNumber));
+    }
+
+    // POST location — called by carrier app
+    @PostMapping("/track/{trackingNumber}/location")
+    @PreAuthorize("hasRole('CARRIER')")
+    public ResponseEntity<Void> pushLocation(
+            @PathVariable String trackingNumber,
+            @Valid @RequestBody PushLocationRequest request) {
+        shipmentService.pushCarrierLocation(trackingNumber, request);
+        return ResponseEntity.ok().build();
+    }
+
 }
