@@ -41,6 +41,9 @@ public class Shipment {
 
     private String estimatedDelivery;
 
+    @Column(name = "carrier_id")
+    private Long carrierId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

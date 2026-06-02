@@ -1,5 +1,6 @@
 package com.apalindromestring.shipmenttracker.shipment.controllers;
 
+import com.apalindromestring.shipmenttracker.auth.security.ShipmentUserDetails;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.EmailSubscriptionRequest;
 import com.apalindromestring.shipmenttracker.shipment.domain.dtos.*;
 import com.apalindromestring.shipmenttracker.shipment.domain.entities.Shipment;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -106,6 +108,24 @@ public class ShipmentController {
             @Valid @RequestBody EmailSubscriptionRequest request
     ) {
         shipmentService.subscribeToEmailUpdates(trackingNumber, request);
+        return ResponseEntity.ok().build();
+    }
+
+    // Carrier fetches their own deliveries
+    @GetMapping("/carrier/my-deliveries")
+    @PreAuthorize("hasRole('CARRIER')")
+    public ResponseEntity<List<ShipmentDto>> getMyDeliveries(Authentication authentication) {
+        ShipmentUserDetails userDetails = (ShipmentUserDetails) authentication.getPrincipal();
+        List<Shipment> shipments = shipmentService.getCarrierShipments(userDetails.getUser().getId());
+        return ResponseEntity.ok(shipments.stream().map(shipmentMapper::toDto).toList());
+    }
+
+    // Admin assigns a carrier to a shipment
+    @PatchMapping("/{id}/assign-carrier/{carrierId}")
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<Void> assignCarrier(@PathVariable Long id,
+                                              @PathVariable Long carrierId) {
+        shipmentService.assignCarrier(id, carrierId);
         return ResponseEntity.ok().build();
     }
 

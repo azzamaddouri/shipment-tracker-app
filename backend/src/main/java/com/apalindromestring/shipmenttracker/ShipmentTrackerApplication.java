@@ -23,17 +23,31 @@ public class ShipmentTrackerApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String email = "user@test.com";
+        String email = "operator@test.com";
         userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = User.builder()
                     .name("Test User")
                     .email(email)
                     .password(passwordEncoder.encode("testultimate"))
-                    .role(Role.CARRIER)
+                    .role(Role.OPERATOR)
                     .active(true)
                     .build();
             return userRepository.save(newUser);
         });
         System.out.println("Test user ready: " + email);
+
+
+        String email_c = "carrier@test.com";
+        userRepository.findByEmail(email_c).orElseGet(() -> {
+            User newUser1 = User.builder()
+                    .name("Test User")
+                    .email(email_c)
+                    .password(passwordEncoder.encode("testultimate"))
+                    .role(Role.CARRIER)
+                    .active(true)
+                    .build();
+            return userRepository.save(newUser1);
+        });
+        System.out.println("Test user ready: " + email_c);
     }
 }

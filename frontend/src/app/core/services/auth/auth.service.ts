@@ -37,6 +37,7 @@ export class AuthService {
   readonly error = computed(() => this._state().error);
   readonly isAuthenticated = computed(()=> this._state().user !== null)
   readonly role = computed(()=> this._state().user?.role ?? null)
+  readonly user = computed(() => this._state().user);
   readonly isOperator = computed(()=>this._state().user?.role === 'OPERATOR');
   readonly isCarrier = computed(()=>this._state().user?.role === 'CARRIER');
   readonly isCustomer = computed(() => this._state().user?.role === 'CUSTOMER');

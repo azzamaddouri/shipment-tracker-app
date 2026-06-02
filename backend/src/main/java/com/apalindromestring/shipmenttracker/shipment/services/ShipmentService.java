@@ -32,5 +32,9 @@ public interface ShipmentService {
 
     void subscribeToEmailUpdates(String trackingNumber, EmailSubscriptionRequest request);
 
+    List<Shipment> getCarrierShipments(Long carrierId);
+
+    void assignCarrier(Long shipmentId, Long carrierId);
+
 
 }

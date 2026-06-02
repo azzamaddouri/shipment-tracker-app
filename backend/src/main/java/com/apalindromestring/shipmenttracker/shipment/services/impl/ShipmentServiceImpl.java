@@ -174,6 +174,20 @@ public class ShipmentServiceImpl implements ShipmentService {
         }
     }
 
+    @Override
+    public List<Shipment> getCarrierShipments(Long carrierId) {
+        return shipmentRepository.findByCarrierIdOrderByUpdatedAtDesc(carrierId);
+    }
+
+    @Override
+    @Transactional
+    public void assignCarrier(Long shipmentId, Long carrierId) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment", "id", shipmentId));
+        shipment.setCarrierId(carrierId);
+        shipmentRepository.save(shipment);
+    }
+
 
     private String generateTrackingNumber() {
         return "TRK" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();

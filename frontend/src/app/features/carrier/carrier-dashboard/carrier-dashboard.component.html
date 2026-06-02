@@ -1,1 +1,358 @@
-<p>carrier-dashboard works!</p>
+<div class="p-6 space-y-6" style="font-family: 'Plus Jakarta Sans', sans-serif">
+
+  <!-- Header -->
+  <div>
+    <p class="text-[11px] font-bold tracking-[.14em] uppercase text-slate-400 mb-0.5">
+      {{ today() }}
+    </p>
+    <h1 class="text-[22px] font-extrabold text-slate-900 m-0"
+        style="font-family:'Syne',sans-serif;">
+      Good {{ greeting() }}, 
+    </h1>
+    <p class="text-[13px] text-slate-400 mt-1">
+      You have
+      <span class="font-bold text-orange-600">{{ todayDeliveries().length }}</span>
+      active {{ todayDeliveries().length === 1 ? 'delivery' : 'deliveries' }} today.
+    </p>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    @for (stat of [
+      { label: 'Assigned today', value: stats().total,     color: 'text-slate-800'  },
+      { label: 'In progress',    value: stats().active,    color: 'text-orange-600' },
+      { label: 'Delivered',      value: stats().delivered, color: 'text-green-600'  },
+      { label: 'Exceptions',     value: stats().exception, color: 'text-red-500'    }
+    ]; track stat.label) {
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-[10px] font-bold tracking-[.12em] uppercase text-slate-400 mb-1">
+          {{ stat.label }}
+        </p>
+        <p class="text-[28px] font-extrabold leading-none m-0"
+           [class]="stat.color"
+           style="font-family:'Syne',sans-serif;">
+          {{ stat.value }}
+        </p>
+      </div>
+    }
+  </div>
+
+  <!-- GPS broadcasting banner -->
+  @if (isBroadcasting()) {
+    <div class="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+      <span class="w-2 h-2 rounded-full bg-green-500 animate-ping shrink-0"></span>
+      <p class="text-[13px] font-semibold text-green-700 flex-1">
+        Broadcasting GPS for
+        <span class="font-mono">
+          {{ shipments() }}
+        </span>
+      </p>
+      <button (click)="carrierService.stopBroadcasting()"
+              class="text-[11px] font-bold text-green-700 border border-green-300
+                     px-2.5 py-1 rounded-lg hover:bg-green-100 transition-colors bg-transparent">
+        Stop
+      </button>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200
+                rounded-xl text-[12px] text-red-700 font-medium">
+      <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Active deliveries -->
+  <div>
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-[12px] font-bold tracking-[.1em] uppercase text-slate-400">
+        Active now
+      </p>
+      <button (click)="carrierService.loadMyDeliveries()"
+              class="text-[11px] font-semibold text-slate-400 hover:text-orange-500
+                     transition-colors flex items-center gap-1 bg-transparent border-none
+                     cursor-pointer">
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+
+    @if (loading()) {
+      <div class="space-y-2">
+        @for (i of [1,2,3]; track i) {
+          <div class="h-[76px] bg-slate-200 rounded-xl animate-pulse"></div>
+        }
+      </div>
+    } @else if (todayDeliveries().length === 0) {
+      <div class="bg-white border border-dashed border-slate-200 rounded-xl
+                  p-10 text-center">
+        <svg class="w-10 h-10 text-slate-200 mx-auto mb-3" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-[13px] font-semibold text-slate-500">All clear!</p>
+        <p class="text-[12px] text-slate-400 mt-1">No active deliveries right now.</p>
+      </div>
+    } @else {
+      <div class="space-y-2">
+        @for (shipment of todayDeliveries(); track shipment.id) {
+          <div class="bg-white border rounded-xl overflow-hidden
+                      transition-all duration-200 hover:shadow-md cursor-pointer group"
+               [class]="activeShipment()?.id === shipment.id
+                 ? 'border-orange-300 shadow-md'
+                 : 'border-slate-200'"
+               (click)="selectShipment(shipment)">
+
+            <div class="h-0.5" [class]="getStatusConfig(shipment.status).dot"></div>
+
+            <div class="p-4 flex items-center gap-3">
+
+              <!-- Status -->
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                           text-[11px] font-bold shrink-0 border"
+                    [class]="getStatusConfig(shipment.status).bg + ' ' +
+                             getStatusConfig(shipment.status).text + ' ' +
+                             getStatusConfig(shipment.status).border">
+                <span class="w-1.5 h-1.5 rounded-full animate-pulse"
+                      [class]="getStatusConfig(shipment.status).dot"></span>
+                {{ STATUS_LABELS[shipment.status] }}
+              </span>
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-[13px] font-bold text-slate-900 font-mono truncate">
+                  {{ shipment.trackingNumber }}
+                </p>
+                <p class="text-[11px] text-slate-500 truncate">
+                  {{ shipment.destination }}
+                </p>
+              </div>
+
+              <!-- ETA -->
+              @if (shipment.estimatedDelivery) {
+                <div class="text-right shrink-0">
+                  <p class="text-[9px] font-bold tracking-[.1em] uppercase text-slate-400">ETA</p>
+                  <p class="text-[12px] font-bold text-orange-600">
+                    {{ shipment.estimatedDelivery | date: 'MMM d' }}
+                  </p>
+                </div>
+              }
+
+              <!-- GPS button -->
+              <button (click)="$event.stopPropagation(); toggleBroadcast(shipment)"
+                      class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center
+                             border transition-all duration-150"
+                      [class]="broadcastingId() === shipment.id
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'bg-white border-slate-200 text-slate-400 hover:border-green-400 hover:text-green-500'">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </button>
+
+              <svg class="w-4 h-4 text-slate-300 shrink-0" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Completed today -->
+  @if (completedToday().length > 0) {
+    <div>
+      <p class="text-[12px] font-bold tracking-[.1em] uppercase text-slate-400 mb-3">
+        Completed today
+        <span class="ml-1.5 text-green-500">{{ completedToday().length }}</span>
+      </p>
+      <div class="space-y-2">
+        @for (s of completedToday(); track s.id) {
+          <div class="bg-white border border-slate-100 rounded-xl p-4
+                      flex items-center gap-3 opacity-70">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                         text-[11px] font-bold shrink-0 border"
+                  [class]="getStatusConfig(s.status).bg + ' ' +
+                           getStatusConfig(s.status).text + ' ' +
+                           getStatusConfig(s.status).border">
+              {{ STATUS_LABELS[s.status] }}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-700 font-mono truncate">
+                {{ s.trackingNumber }}
+              </p>
+              <p class="text-[11px] text-slate-400 truncate">{{ s.destination }}</p>
+            </div>
+            <p class="text-[11px] text-slate-400 shrink-0 font-medium">
+              {{ s.updatedAt | date: 'HH:mm' }}
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- ══ STATUS SHEET ═══════════════════════════════════════════════════════ -->
+@if (showStatusSheet() && activeShipment(); as s) {
+  <div class="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+       (click)="closeSheet()"></div>
+
+  <div class="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl
+              shadow-2xl max-w-[600px] mx-auto"
+       style="animation: slideUp .25s ease both;">
+
+    <div class="flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 bg-slate-200 rounded-full"></div>
+    </div>
+
+    <div class="px-5 pb-8 pt-2 space-y-5">
+
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold tracking-[.14em] uppercase text-slate-400">
+            Active shipment
+          </p>
+          <h2 class="text-[18px] font-extrabold text-slate-900 font-mono"
+              style="font-family:'Syne',sans-serif;">{{ s.trackingNumber }}</h2>
+          <p class="text-[12px] text-slate-500 mt-0.5">
+            {{ s.origin }} → {{ s.destination }}
+          </p>
+        </div>
+        <button (click)="closeSheet()"
+                class="w-8 h-8 flex items-center justify-center rounded-full
+                       bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      @if (updateSuccess()) {
+        <div class="flex items-center gap-2 px-3 py-2.5 bg-green-50 border border-green-200
+                    rounded-lg text-[12px] font-semibold text-green-700">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M5 13l4 4L19 7"/>
+          </svg>
+          {{ updateSuccess() }}
+        </div>
+      }
+
+      <!-- Status buttons -->
+      <div>
+        <p class="text-[11px] font-bold tracking-[.12em] uppercase text-slate-400 mb-2">
+          Update status
+        </p>
+        @if (allowedNextStatuses().length === 0) {
+          <p class="text-[13px] text-slate-400 italic">No further changes available.</p>
+        } @else {
+          <div class="grid grid-cols-2 gap-2">
+            @for (next of allowedNextStatuses(); track next) {
+              <button (click)="applyStatus(next)" [disabled]="updating()"
+                      class="h-12 flex items-center justify-center gap-2 rounded-xl
+                             border font-bold text-[13px] transition-all duration-150
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                      [class]="getStatusConfig(next).bg + ' ' +
+                               getStatusConfig(next).text + ' ' +
+                               getStatusConfig(next).border">
+                @if (updating()) {
+                  <span class="w-3.5 h-3.5 rounded-full border-2 border-current
+                               border-t-transparent animate-spin"></span>
+                }
+                {{ STATUS_LABELS[next] }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- GPS -->
+      <div class="border-t border-slate-100 pt-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-[11px] font-bold tracking-[.12em] uppercase text-slate-400">
+            Live location
+          </p>
+          @if (gpsState() === 'broadcasting' && broadcastingId() === s.id) {
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold
+                         text-green-700 bg-green-50 border border-green-200
+                         px-2 py-0.5 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
+              Broadcasting
+            </span>
+          }
+        </div>
+
+        @if (gpsError()) {
+          <div class="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200
+                      rounded-lg text-[12px] text-amber-700 mb-3">
+            <svg class="w-4 h-4 shrink-0 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            {{ gpsError() }}
+          </div>
+        }
+
+        <div class="flex gap-2 flex-wrap">
+          <button (click)="toggleBroadcast(s)"
+                  class="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl
+                         border font-semibold text-[13px] transition-all duration-150"
+                  [class]="broadcastingId() === s.id
+                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                    : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            {{ broadcastingId() === s.id ? 'Stop GPS' : 'Start GPS broadcast' }}
+          </button>
+
+          <button (click)="showManualInput.update(v => !v)"
+                  class="h-11 px-4 flex items-center justify-center gap-1.5 rounded-xl
+                         border border-slate-200 text-[13px] font-semibold text-slate-600
+                         hover:bg-slate-50 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Manual
+          </button>
+        </div>
+
+        @if (showManualInput()) {
+          <form [formGroup]="manualLocationForm" (ngSubmit)="submitManualLocation()"
+                class="flex gap-2 mt-3">
+            <input formControlName="location" type="text"
+                   placeholder="e.g. Frankfurt Hub, Gate 3"
+                   class="flex-1 h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg
+                          text-[13px] outline-none focus:border-orange-500 focus:bg-white
+                          focus:shadow-[0_0_0_3px_rgba(249,115,22,.08)]
+                          transition-all duration-150 placeholder:text-slate-400"/>
+            <button type="submit"
+                    class="h-10 px-4 bg-orange-500 text-white border-none rounded-lg
+                           text-[12px] font-bold cursor-pointer hover:bg-orange-600
+                           transition-colors">
+              Push
+            </button>
+          </form>
+        }
+      </div>
+    </div>
+  </div>
+}

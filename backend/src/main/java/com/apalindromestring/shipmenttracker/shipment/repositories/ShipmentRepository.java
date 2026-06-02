@@ -14,4 +14,5 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
     List<Shipment> findTop3ByOrderByUpdatedAtDesc();
 
+    List<Shipment> findByCarrierIdOrderByUpdatedAtDesc(Long carrierId);
 }

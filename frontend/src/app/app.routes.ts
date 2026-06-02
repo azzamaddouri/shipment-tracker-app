@@ -3,6 +3,7 @@ import { publicGuard } from './core/guards/public/public-guard';
 import { authGuard } from './core/guards/auth/auth-guard';
 import { roleGuard } from './core/guards/role/role-guard';
 import { CarrierShellComponent } from './layout/carrier-shell/carrier-shell.component';
+import { CarrierDashboardComponent } from './features/carrier/carrier-dashboard/carrier-dashboard.component';
 ;
 
 export const routes: Routes = [
@@ -50,21 +51,25 @@ export const routes: Routes = [
     },
 
     {
-        path:'carrier',
-        component: CarrierShellComponent,
-        canActivate:[authGuard, roleGuard('CARRIER')],
-        children:[
-            {path: '', redirectTo:'dashboard', pathMatch:'full'},
-            {
-                path: 'dashboard',
-                loadComponent: () => 
-                    import('./features/carrier/carrier-dashboard/carrier-dashboard.component')
+    path: 'carrier',
+    component: CarrierShellComponent,
+    canActivate: [authGuard, roleGuard('CARRIER')],
+    children: [
+        { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+        {
+            path: 'dashboard',
+            loadComponent: () =>
+                import('./features/carrier/carrier-dashboard/carrier-dashboard.component')
                 .then(m => m.CarrierDashboardComponent)
-            }
-
-        ]
-        
-    },
+        },
+        {
+            path: 'deliveries',   // ← add this
+            loadComponent: () =>
+                import('./features/carrier/carrier-deliveries/carrier-deliveries.component')
+                .then(m => m.CarrierDeliveriesComponent)
+        }
+    ]
+},
     
     {path:'**', redirectTo:'' },
 
